@@ -16,7 +16,7 @@ $ composer install
 - [PHP](https://php.net) 7.1.3 or above
 
 ## Tutorial
-This tutorial is designed to walk you through a typical regression problem in Rubix using the sale price of a home as the target variable. We are given a training set consisting of 1460 labeled samples and 1459 unknown samples. Each sample contains a heterogeneous mix of categorical and continuous data types. Instead of coverting all of the features to one type, we'll choose the Gradient Boost regressor because it is capable of handling both data types at once.
+This tutorial is designed to walk you through a typical regression problem in Rubix using the sale price of a home as the target variable. We are given a training set consisting of 1460 labeled samples and 1459 unknown samples. Each sample contains a heterogeneous mix of categorical and continuous data types. Instead of coverting all of the features to one type, we'll choose the [Gradient Boost](https://github.com/RubixML/RubixML#gradient-boost) regressor because it is capable of handling both data types at once by default.
 
 ### Training
 The data are given to us in a CSV file so we'll use the PHP League's [CSV Reader](https://csv.thephpleague.com/) to assist us in extracting the data into a [Labeled](https://github.com/RubixML/RubixML#labeled) dataset object.
