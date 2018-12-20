@@ -2,7 +2,6 @@
 
 include __DIR__ . '/vendor/autoload.php';
 
-use Rubix\ML\Pipeline;
 use Rubix\ML\PersistentModel;
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Other\Loggers\Screen;
@@ -49,25 +48,25 @@ $labels = $reader->fetchColumn('SalePrice');
 
 $dataset = Labeled::fromIterator($samples, $labels);
 
-$estimator = new PersistentModel(new Pipeline([
-    new NumericStringConverter(),
-], new GradientBoost(new RegressionTree(3), 0.1, 500, 0.3)),
-    new Filesystem(MODEL_FILE)
-);
-
-$estimator->setLogger(new Screen('housing'));
-
-$report = new ResidualAnalysis();
+$dataset->apply(new NumericStringConverter());
 
 list($training, $testing) = $dataset->randomize()->split(0.8);
+
+$estimator = new GradientBoost(new RegressionTree(4), 0.1, 300, 0.8);
+
+$estimator = new PersistentModel($estimator, new Filesystem(MODEL_FILE));
+
+$estimator->setLogger(new Screen('housing'));
 
 $estimator->train($training);
 
 $writer = Writer::createFromPath(PROGRESS_FILE, 'w+');
 $writer->insertOne(['loss']);
-$writer->insertAll([$estimator->steps()]);
+$writer->insertAll(array_map(null, $estimator->steps(), []));
 
 $predictions = $estimator->predict($testing);
+
+$report = new ResidualAnalysis();
 
 $results = $report->generate($predictions, $testing->labels());
 

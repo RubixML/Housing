@@ -18,7 +18,7 @@ echo '║                                                               ║' . "
 echo '╚═══════════════════════════════════════════════════════════════╝' . "\n";
 echo "\n";
 
-$reader = Reader::createFromPath(__DIR__ . '/test.csv')
+$reader = Reader::createFromPath(__DIR__ . '/unknown.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
