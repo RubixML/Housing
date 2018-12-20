@@ -81,7 +81,7 @@ use Rubix\ML\Other\Loggers\Screen;
 
 $estimator = new GradientBoost(new RegressionTree(4), 0.1, 300, 0.8);
 
-$estimator = new PersistentModel($estimator, new Filesystem(MODEL_FILE));
+$estimator = new PersistentModel($estimator, new Filesystem('housing.model'));
 
 $estimator->setLogger(new Screen('housing'));
 ```
@@ -93,12 +93,12 @@ use League\Csv\Writer;
 
 $estimator->train($training);
 
-$writer = Writer::createFromPath(PROGRESS_FILE, 'w+');
+$writer = Writer::createFromPath('progress.csv', 'w+');
 $writer->insertOne(['loss']);
-$writer->insertAll([$estimator->steps()]);
+$writer->insertAll(array_map(null, $estimator->steps(), []));
 ```
 
-Here is an example of what the training loss looks like when plotted. You can plot the loss yourself using your favorite plotting software. If you're looking for a place to start, we recommend either [Tableu](https://public.tableau.com/en-us/s/) or [Google Sheets](https://www.google.com/sheets/about/).
+Here is an example of what the training loss looks like when its plotted. You can plot the loss yourself by importing the `progress.csv` file into your favorite plotting software. If you're looking for a place to start, we recommend either [Tableu](https://public.tableau.com/en-us/s/) or [Google Sheets](https://www.google.com/sheets/about/).
 
 ![MSE Loss](https://github.com/RubixML/Housing/blob/master/docs/images/training-loss.png)
 
@@ -113,10 +113,10 @@ $report = new ResidualAnalysis();
 
 $results = $report->generate($predictions, $testing->labels());
 
-file_put_contents(REPORT_FILE, json_encode($results, JSON_PRETTY_PRINT));
+file_put_contents('report.json', json_encode($results, JSON_PRETTY_PRINT));
 ```
 
-The report should look something like this.
+The file `report.json` should look something like the following.
 
 ```json
 {

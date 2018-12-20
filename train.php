@@ -13,10 +13,6 @@ use Rubix\ML\CrossValidation\Reports\ResidualAnalysis;
 use League\Csv\Reader;
 use League\Csv\Writer;
 
-const MODEL_FILE = 'housing.model';
-const PROGRESS_FILE = 'progress.csv';
-const REPORT_FILE = 'report.json';
-
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
 echo '║ Housing Price Predictor using a Gradient Boosted Machine      ║' . PHP_EOL;
@@ -54,13 +50,13 @@ list($training, $testing) = $dataset->randomize()->split(0.8);
 
 $estimator = new GradientBoost(new RegressionTree(4), 0.1, 300, 0.8);
 
-$estimator = new PersistentModel($estimator, new Filesystem(MODEL_FILE));
+$estimator = new PersistentModel($estimator, new Filesystem('housing.model'));
 
 $estimator->setLogger(new Screen('housing'));
 
 $estimator->train($training);
 
-$writer = Writer::createFromPath(PROGRESS_FILE, 'w+');
+$writer = Writer::createFromPath('progress.csv', 'w+');
 $writer->insertOne(['loss']);
 $writer->insertAll(array_map(null, $estimator->steps(), []));
 
@@ -70,6 +66,6 @@ $report = new ResidualAnalysis();
 
 $results = $report->generate($predictions, $testing->labels());
 
-file_put_contents(REPORT_FILE, json_encode($results, JSON_PRETTY_PRINT));
+file_put_contents('report.json', json_encode($results, JSON_PRETTY_PRINT));
 
 $estimator->prompt();

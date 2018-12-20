@@ -6,10 +6,6 @@ use Rubix\ML\PersistentModel;
 use Rubix\ML\Datasets\Unlabeled;
 use Rubix\ML\Persisters\Filesystem;
 use League\Csv\Reader;
-use League\Csv\Writer;
-
-const MODEL_FILE = 'housing.model';
-const PREDICTIONS_FILE = 'predictions.json';
 
 echo '╔═══════════════════════════════════════════════════════════════╗' . "\n";
 echo '║                                                               ║' . "\n";
@@ -40,12 +36,14 @@ $samples = $reader->getRecords([
 
 $dataset = Unlabeled::fromIterator($samples);
 
-$estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
+$estimator = PersistentModel::load(new Filesystem('housing.model'));
+
+echo 'Making predictions ...' . PHP_EOL;
 
 $estimator->predict($dataset);
 
 $predictions = $estimator->predict($dataset);
 
-file_put_contents(PREDICTIONS_FILE, json_encode($predictions, JSON_PRETTY_PRINT));
+file_put_contents('predictions.json', json_encode($predictions, JSON_PRETTY_PRINT));
 
-echo 'Predictions saved to ' . PREDICTIONS_FILE . PHP_EOL;
+echo 'Predictions saved to predictions.json.' . PHP_EOL;
