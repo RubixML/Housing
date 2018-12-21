@@ -6,13 +6,14 @@ use Rubix\ML\PersistentModel;
 use Rubix\ML\Datasets\Unlabeled;
 use Rubix\ML\Persisters\Filesystem;
 use League\Csv\Reader;
+use League\Csv\Writer;
 
-echo '╔═══════════════════════════════════════════════════════════════╗' . "\n";
-echo '║                                                               ║' . "\n";
-echo '║ House Prices Predictor using Gradient Boosted Machine         ║' . "\n";
-echo '║                                                               ║' . "\n";
-echo '╚═══════════════════════════════════════════════════════════════╝' . "\n";
-echo "\n";
+echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
+echo '║                                                               ║' . PHP_EOL;
+echo '║ House Prices Predictor using Gradient Boosted Machine         ║' . PHP_EOL;
+echo '║                                                               ║' . PHP_EOL;
+echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
+echo PHP_EOL;
 
 $reader = Reader::createFromPath(__DIR__ . '/unknown.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
@@ -34,16 +35,18 @@ $samples = $reader->getRecords([
     'MiscVal', 'MoSold', 'YrSold', 'SaleType', 'SaleCondition',
 ]);
 
+$ids = iterator_to_array($reader->fetchColumn('Id'));
+
 $dataset = Unlabeled::fromIterator($samples);
 
 $estimator = PersistentModel::load(new Filesystem('housing.model'));
 
 echo 'Making predictions ...' . PHP_EOL;
 
-$estimator->predict($dataset);
-
 $predictions = $estimator->predict($dataset);
 
-file_put_contents('predictions.json', json_encode($predictions, JSON_PRETTY_PRINT));
+$writer = Writer::createFromPath('predictions.csv', 'w+');
+$writer->insertOne(['Id', 'SalePrice']);
+$writer->insertAll(array_map(null, $ids, $predictions));
 
-echo 'Predictions saved to predictions.json.' . PHP_EOL;
+echo 'Predictions saved to predictions.csv.' . PHP_EOL;

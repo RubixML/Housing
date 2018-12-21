@@ -1,7 +1,7 @@
 /vendor
 composer.lock
+predictions.csv
 progress.csv
 report.json
-predictions.json
 *.model
 *.old
