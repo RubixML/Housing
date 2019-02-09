@@ -13,6 +13,8 @@ use Rubix\ML\CrossValidation\Reports\ResidualAnalysis;
 use League\Csv\Reader;
 use League\Csv\Writer;
 
+const MODEL_FILE = 'housing.model';
+
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
 echo '║ Housing Price Predictor using a Gradient Boosted Machine      ║' . PHP_EOL;
@@ -20,7 +22,9 @@ echo '║                                                               ║' . P
 echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
 echo PHP_EOL;
 
-$reader = Reader::createFromPath(__DIR__ . '/train.csv')
+echo 'Loading data into memory ...' . PHP_EOL;
+
+$reader = Reader::createFromPath(__DIR__ . '/training.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
@@ -46,13 +50,18 @@ $dataset = Labeled::fromIterator($samples, $labels);
 
 $dataset->apply(new NumericStringConverter());
 
-list($training, $testing) = $dataset->randomize()->split(0.8);
+$dataset->transformLabels(function ($label) {
+    return (int) $label;
+});
 
-$estimator = new GradientBoost(new RegressionTree(4), 0.1, 300, 0.8);
-
-$estimator = new PersistentModel($estimator, new Filesystem('housing.model'));
+$estimator = new PersistentModel(
+    new GradientBoost(new RegressionTree(3), 0.1, 300, 0.3),
+    new Filesystem(MODEL_FILE)
+);
 
 $estimator->setLogger(new Screen('housing'));
+
+list($training, $testing) = $dataset->randomize()->split(0.8);
 
 $estimator->train($training);
 
@@ -68,4 +77,6 @@ $results = $report->generate($predictions, $testing->labels());
 
 file_put_contents('report.json', json_encode($results, JSON_PRETTY_PRINT));
 
-$estimator->prompt();
+if (strtolower(readline('Save this model? (y|[n]): ')) === 'y') {
+    $estimator->save();
+}

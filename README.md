@@ -68,6 +68,14 @@ use Rubix\ML\Transformers\NumericStringConverter;
 $dataset->apply(new NumericStringConverter());
 ```
 
+We take care of converting the labels with the `transformLabels()` method on the Labeled dataset object. It takes a function that receives the label and return the transformed label as its only argument. Since the labels of this dataset are the sale prices of each house rounded to the nearest dollar, we'll cast the imported strings (categorical) to integers (continuous).
+
+```php
+$dataset->transformLabels(function ($label) {
+    return (int) $label; // Cast to an integer
+});
+```
+
 We'd like to be able to tell if the model we've trained is any good. As such, we'll need to set some of the data aside for testing purposes. Fortunately, dataset objects make it really easy to randomize and split the dataset for you. Let's pick 80% of the data for training and the remaining 20% to be used for testing.
 
 ```php
@@ -152,18 +160,14 @@ The file `report.json` should look something like the following.
 Finally, prompt the user to save the model.
 
 ```php
-$estimator->prompt();
+if (strtolower(readline('Save this model? (y|[n]): ')) === 'y') {
+    $estimator->save();
+}
 ```
 
 To run the training script from the project root:
 ```sh
 $ php train.php
-```
-
-or
-
-```sh
-$ composer train
 ```
 
 ### Prediction
@@ -224,12 +228,6 @@ That's it! Best of luck!
 To run the prediction script from the project root:
 ```sh
 $ php predict.php
-```
-
-or
-
-```sh
-$ composer predict
 ```
 
 ### Wrapup

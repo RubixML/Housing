@@ -15,6 +15,8 @@ echo '║                                                               ║' . P
 echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
 echo PHP_EOL;
 
+echo 'Loading data into memory ...' . PHP_EOL;
+
 $reader = Reader::createFromPath(__DIR__ . '/unknown.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
 
