@@ -27,7 +27,7 @@ A Gradient Boosted Machine is a type of *ensemble* estimator that uses [Regressi
 ### Training
 The data are given to us in a CSV file so we'll use the PHP League's [CSV Reader](https://csv.thephpleague.com/) to assist us in extracting the data into a [Labeled](https://github.com/RubixML/RubixML#labeled) dataset object.
 
-> **Note**: The full code can be found in the `train.php` file in the root directory.
+> Source code can be found in the [train.php](https://github.com/RubixML/Housing/blob/master/train.php) file in project root.
 
 ```php
 use Rubix\ML\Datasets\Labeled;
@@ -68,18 +68,16 @@ use Rubix\ML\Transformers\NumericStringConverter;
 $dataset->apply(new NumericStringConverter());
 ```
 
-We take care of converting the labels with the `transformLabels()` method on the Labeled dataset object. It takes a function that receives the label and return the transformed label as its only argument. Since the labels of this dataset are the sale prices of each house rounded to the nearest dollar, we'll cast the imported strings (categorical) to integers (continuous).
+We take care of converting the labels with the `transformLabels()` method on the Labeled dataset object. It takes a function that receives the label and return the transformed label as its only argument. Since the labels of this dataset are the sale prices of each house rounded to the nearest dollar, we'll cast the imported strings (categorical) to integers (continuous) using the built in PHP function `intval()`.
 
 ```php
-$dataset->transformLabels(function ($label) {
-    return (int) $label; // Cast to an integer
-});
+$dataset->transformLabels('intval');
 ```
 
 We'd like to be able to tell if the model we've trained is any good. As such, we'll need to set some of the data aside for testing purposes. Fortunately, dataset objects make it really easy to randomize and split the dataset for you. Let's pick 80% of the data for training and the remaining 20% to be used for testing.
 
 ```php
-list($training, $testing) = $dataset->randomize()->split(0.8);
+[$training, $testing] = $dataset->randomize()->split(0.8);
 ```
 
 The next item on our list is to instantiate the Gradient Boost learner and wrap it in a Persistent Model meta-Estimator so we can save it for later use. 
@@ -94,34 +92,27 @@ use Rubix\ML\Regressors\GradientBoost;
 use Rubix\ML\Regressors\RegressionTree;
 use Rubix\ML\Persisters\Filesystem;
 
-$estimator = new GradientBoost(new RegressionTree(4), 0.1, 300, 0.8);
-
-$estimator = new PersistentModel($estimator, new Filesystem('housing.model'));
+$estimator = new PersistentModel(
+    new GradientBoost(new RegressionTree(4), 0.1, 100, 0.8),
+    new Filesystem(MODEL_FILE, true)
+);
 ```
 
-Since Gradient Boost implements the *Verbose* interface, we set a [Screen Logger](https://github.com/RubixML/RubixML#screen) so we can monitor the training progress in real time.
+Now, training is simply a matter of passing in the *training* set to the estimator's `train()` method.
 
 ```php
-use Rubix\ML\Other\Loggers\Screen;
-
-$estimator->setLogger(new Screen('housing'));
-```
-
-Now, training is simply a matter of passing in the *training* set to the estimator's `train()` method. We'll also dump the value of the loss function at each epoch to a CSV file using the League's CSV Writer so we can visualize it later.
-
-```php
-use League\Csv\Writer;
-
 $estimator->train($training);
+```
 
-$writer = Writer::createFromPath('progress.csv', 'w+');
-$writer->insertOne(['loss']);
-$writer->insertAll(array_map(null, $estimator->steps(), []));
+Then we'll dump the training loss at each epoch from the training session so we can visualize it.
+
+```php
+$steps = $estimator->steps();
 ```
 
 Here is an example of what the training loss looks like when its plotted. You can plot the loss yourself by importing the `progress.csv` file into your favorite plotting software. If you're looking for a place to start, we recommend either [Tableu](https://public.tableau.com/en-us/s/) or [Google Sheets](https://www.google.com/sheets/about/).
 
-![MSE Loss](https://github.com/RubixML/Housing/blob/master/docs/images/training-loss.png)
+![MSE Loss](https://raw.githubusercontent.com/RubixML/Housing/master/docs/images/training-loss.svg?sanitize=true)
 
 The remaining data left in the *testing* set is used to generate a [Residual Analysis](https://github.com/RubixML/RubixML#residual-analysis) report which ouputs a number of validation metrics including Mean Absolute Error (MAE), Mean Squared Error (MSE), and R Squared (R2). To generate the report we'll need the predictions from the estimator and the labels from the testing set. Lastly, we'll save the report to a JSON file so we can review the performance before saving the model to storage.
 
@@ -133,35 +124,33 @@ $predictions = $estimator->predict($testing);
 $report = new ResidualAnalysis();
 
 $results = $report->generate($predictions, $testing->labels());
-
-file_put_contents('report.json', json_encode($results, JSON_PRETTY_PRINT));
 ```
 
-The file `report.json` should look something like the following.
+The results will look something like this.
 
 ```json
 {
-    "mean_absolute_error": 15007.526455712445,
-    "median_absolute_error": 11027.516021091185,
-    "mean_squared_error": 478150071.95219266,
-    "mean_squared_log_error": 19.985435199240193,
-    "rms_error": 21866.642905398,
-    "r_squared": 0.9141839883291687,
-    "error_mean": -2055.3779961744563,
-    "error_variance": 473925493.2450344,
-    "error_skewness": 0.248605560779077,
-    "error_kurtosis": 7.558982938324787,
-    "error_min": -108277.51692212999,
-    "error_max": 126464.11156558566,
+    "mean_absolute_error": 14528.340820915579,
+    "median_absolute_error": 10549.487747601735,
+    "mean_absolute_percentage_error": 8.911117077298245,
+    "mean_squared_error": 397960732.04236144,
+    "rms_error": 19948.95315655339,
+    "mean_squared_log_error": 0.01637578248729187,
+    "r_squared": 0.8986000796796421,
+    "error_mean": 44.38514176512214,
+    "error_variance": 397958762.0015515,
+    "error_skewness": 0.018759888007460087,
+    "error_kurtosis": 2.103139242198865,
+    "error_min": -80358.30060322193,
+    "error_max": 84035.54964507371,
     "cardinality": 292
 }
 ```
 
-Finally, prompt the user to save the model.
+Finally, save the model so we can use it later to predict prices of unknown samples.
 
 ```php
-if (strtolower(readline('Save this model? (y|[n]): ')) === 'y') {
-    $estimator->save();
+$estimator->save();
 }
 ```
 
@@ -172,6 +161,8 @@ $ php train.php
 
 ### Prediction
 The model we trained will now be used to generate predictions to submit to the Kaggle competition. We'll load the unknown samples from the `unknown.csv` file into an Unlabeled dataset object and keep track of their *Id* number in a separate array for later.
+
+> Source code can be found in the [predict.php](https://github.com/RubixML/Housing/blob/master/predict.php) file in the project root.
 
 ```php
 use Rubix\ML\Datasets\Unlabeled;
@@ -214,13 +205,7 @@ $estimator = PersistentModel::load(new Filesystem('housing.model'));
 Now just call `predict()` with the unknown dataset and write the predictions to a CSV file with their cooresponding Ids. An example of a sample submission can be found in the `sample_submission.csv` file.
 
 ```php
-use League\Csv\Writer;
-
 $predictions = $estimator->predict($dataset);
-
-$writer = Writer::createFromPath('predictions.csv', 'w+');
-$writer->insertOne(['Id', 'SalePrice']);
-$writer->insertAll(array_map(null, $ids, $predictions));
 ```
 
 That's it! Best of luck!

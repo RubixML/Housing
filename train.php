@@ -14,6 +14,8 @@ use League\Csv\Reader;
 use League\Csv\Writer;
 
 const MODEL_FILE = 'housing.model';
+const PROGRESS_FILE = 'progress.csv';
+const REPORT_FILE = 'report.json';
 
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
@@ -24,7 +26,7 @@ echo PHP_EOL;
 
 echo 'Loading data into memory ...' . PHP_EOL;
 
-$reader = Reader::createFromPath(__DIR__ . '/training.csv')
+$reader = Reader::createFromPath(__DIR__ . '/dataset.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
@@ -50,22 +52,20 @@ $dataset = Labeled::fromIterator($samples, $labels);
 
 $dataset->apply(new NumericStringConverter());
 
-$dataset->transformLabels(function ($label) {
-    return (int) $label;
-});
+$dataset->transformLabels('intval');
+
+[$training, $testing] = $dataset->randomize()->split(0.8);
 
 $estimator = new PersistentModel(
-    new GradientBoost(new RegressionTree(3), 0.1, 300, 0.3),
-    new Filesystem(MODEL_FILE)
+    new GradientBoost(new RegressionTree(4), 0.1, 100, 0.8),
+    new Filesystem(MODEL_FILE, true)
 );
 
 $estimator->setLogger(new Screen('housing'));
 
-list($training, $testing) = $dataset->randomize()->split(0.8);
-
 $estimator->train($training);
 
-$writer = Writer::createFromPath('progress.csv', 'w+');
+$writer = Writer::createFromPath(PROGRESS_FILE, 'w+');
 $writer->insertOne(['loss']);
 $writer->insertAll(array_map(null, $estimator->steps(), []));
 
@@ -75,7 +75,10 @@ $report = new ResidualAnalysis();
 
 $results = $report->generate($predictions, $testing->labels());
 
-file_put_contents('report.json', json_encode($results, JSON_PRETTY_PRINT));
+file_put_contents(REPORT_FILE, json_encode($results, JSON_PRETTY_PRINT));
+
+echo 'Progress saved to ' . PROGRESS_FILE . PHP_EOL;
+echo 'Report saved to ' . REPORT_FILE . PHP_EOL;
 
 if (strtolower(readline('Save this model? (y|[n]): ')) === 'y') {
     $estimator->save();

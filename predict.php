@@ -8,6 +8,9 @@ use Rubix\ML\Persisters\Filesystem;
 use League\Csv\Reader;
 use League\Csv\Writer;
 
+const MODEL_FILE = 'housing.model';
+const PREDICTIONS_FILE = 'predictions.csv';
+
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
 echo '║ House Prices Predictor using Gradient Boosted Machine         ║' . PHP_EOL;
@@ -41,14 +44,12 @@ $ids = iterator_to_array($reader->fetchColumn('Id'));
 
 $dataset = Unlabeled::fromIterator($samples);
 
-$estimator = PersistentModel::load(new Filesystem('housing.model'));
-
-echo 'Making predictions ...' . PHP_EOL;
+$estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
 
 $predictions = $estimator->predict($dataset);
 
-$writer = Writer::createFromPath('predictions.csv', 'w+');
+$writer = Writer::createFromPath(PREDICTIONS_FILE, 'w+');
 $writer->insertOne(['Id', 'SalePrice']);
 $writer->insertAll(array_map(null, $ids, $predictions));
 
-echo 'Predictions saved to predictions.csv.' . PHP_EOL;
+echo 'Predictions saved to ' . PREDICTIONS_FILE . PHP_EOL;
