@@ -2,7 +2,7 @@
 This is an example Rubix ML project that predicts house prices using a Gradient Boosted Machine. The dataset was featured in a popular [Kaggle competition](https://www.kaggle.com/c/house-prices-advanced-regression-techniques) designed to teach advanced regression skills. In this tutorial, you'll learn about regression analysis and the stage-wise additive boosting ensemble [Gradient Boost](https://github.com/RubixML/RubixML#gradient-boost). By the end of the tutorial, you'll be able to submit your own predictions to the competition.
 
 - **Difficulty**: Easy
-- **Training time**: Short
+- **Training time**: < 5 Minutes
 - **Memory needed**: < 1G
 
 ## Installation
@@ -27,7 +27,7 @@ A Gradient Boosted Machine is a type of *ensemble* estimator that uses [Regressi
 ### Training
 The data are given to us in a CSV file so we'll use the PHP League's [CSV Reader](https://csv.thephpleague.com/) to assist us in extracting the data into a [Labeled](https://github.com/RubixML/RubixML#labeled) dataset object.
 
-> Source code can be found in the [train.php](https://github.com/RubixML/Housing/blob/master/train.php) file in project root.
+> The source code can be found in the [train.php](https://github.com/RubixML/Housing/blob/master/train.php) file in project root.
 
 ```php
 use Rubix\ML\Datasets\Labeled;
@@ -151,7 +151,6 @@ Finally, save the model so we can use it later to predict prices of unknown samp
 
 ```php
 $estimator->save();
-}
 ```
 
 To run the training script from the project root:
@@ -162,7 +161,7 @@ $ php train.php
 ### Prediction
 The model we trained will now be used to generate predictions to submit to the Kaggle competition. We'll load the unknown samples from the `unknown.csv` file into an Unlabeled dataset object and keep track of their *Id* number in a separate array for later.
 
-> Source code can be found in the [predict.php](https://github.com/RubixML/Housing/blob/master/predict.php) file in the project root.
+> The source code can be found in the [predict.php](https://github.com/RubixML/Housing/blob/master/predict.php) file in the project root.
 
 ```php
 use Rubix\ML\Datasets\Unlabeled;
@@ -208,7 +207,7 @@ Now just call `predict()` with the unknown dataset and write the predictions to 
 $predictions = $estimator->predict($dataset);
 ```
 
-That's it! Best of luck!
+That's it! Best of luck on the competition!
 
 To run the prediction script from the project root:
 ```sh
