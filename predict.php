@@ -11,6 +11,8 @@ use League\Csv\Writer;
 const MODEL_FILE = 'housing.model';
 const PREDICTIONS_FILE = 'predictions.csv';
 
+ini_set('memory_limit', '-1');
+
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
 echo '║ House Prices Predictor using Gradient Boosted Machine         ║' . PHP_EOL;

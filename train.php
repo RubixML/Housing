@@ -17,6 +17,8 @@ const MODEL_FILE = 'housing.model';
 const PROGRESS_FILE = 'progress.csv';
 const REPORT_FILE = 'report.json';
 
+ini_set('memory_limit', '-1');
+
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
 echo '║ Housing Price Predictor using a Gradient Boosted Machine      ║' . PHP_EOL;
