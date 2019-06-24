@@ -93,7 +93,7 @@ use Rubix\ML\Regressors\RegressionTree;
 use Rubix\ML\Persisters\Filesystem;
 
 $estimator = new PersistentModel(
-    new GradientBoost(new RegressionTree(4), 0.1, 100, 0.8),
+    new GradientBoost(new RegressionTree(4), 100, 0.1, 0.8),
     new Filesystem(MODEL_FILE, true)
 );
 ```
