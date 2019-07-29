@@ -8,7 +8,10 @@ use Rubix\ML\Other\Loggers\Screen;
 use Rubix\ML\Persisters\Filesystem;
 use Rubix\ML\Regressors\GradientBoost;
 use Rubix\ML\Regressors\RegressionTree;
+use Rubix\ML\Regressors\ExtraTreeRegressor;
+use Rubix\ML\Transformers\MissingDataImputer;
 use Rubix\ML\Transformers\NumericStringConverter;
+use Rubix\ML\CrossValidation\Metrics\SMAPE;
 use Rubix\ML\CrossValidation\Reports\ResidualAnalysis;
 use League\Csv\Reader;
 use League\Csv\Writer;
@@ -53,13 +56,14 @@ $labels = $reader->fetchColumn('SalePrice');
 $dataset = Labeled::fromIterator($samples, $labels);
 
 $dataset->apply(new NumericStringConverter());
+$dataset->apply(new MissingDataImputer('?'));
 
 $dataset->transformLabels('intval');
 
 [$training, $testing] = $dataset->randomize()->split(0.8);
 
 $estimator = new PersistentModel(
-    new GradientBoost(new RegressionTree(4), 0.1, 100, 0.8),
+    new GradientBoost(new RegressionTree(4), 0.1),
     new Filesystem(MODEL_FILE, true)
 );
 

@@ -84,7 +84,7 @@ The next item on our list is to instantiate the Gradient Boost learner and wrap 
 
 The first hyper-parameter is the booster instance i.e the tree that is used to fix up the errors of the base estimator. The step size is controlled by the *rate* hyper-parameter. In addition, you can control the maximum number of iterations with the *estimators* parameter and the ratio of training data to feed into each booster with the *ratio* parameter. For a full list of hyper-parameters, see the [docs](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html).
 
-We choose to use a Regression Tree with max depth of 4 as the boosting estimator, a learning rate of 0.1, and a maximum of 300 iterations using 80% of the training data per iteration.
+For this example we use a Regression Tree with max depth of 4 as the boosting estimator, with a learning rate of 0.1.
 
 ```php
 use Rubix\ML\PersistentModel;
@@ -93,7 +93,7 @@ use Rubix\ML\Regressors\RegressionTree;
 use Rubix\ML\Persisters\Filesystem;
 
 $estimator = new PersistentModel(
-    new GradientBoost(new RegressionTree(4), 100, 0.1, 0.8),
+    new GradientBoost(new RegressionTree(4), 0.1),
     new Filesystem(MODEL_FILE, true)
 );
 ```
