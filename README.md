@@ -1,17 +1,17 @@
 # Housing Price Predictor
-This is an example Rubix ML project that predicts house prices using a Gradient Boosted Machine. The dataset was featured in a popular [Kaggle competition](https://www.kaggle.com/c/house-prices-advanced-regression-techniques) designed to teach advanced regression skills. In this tutorial, you'll learn about regression analysis and the stage-wise additive boosting ensemble [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html). By the end of the tutorial, you'll be able to submit your own predictions to the competition.
+An example Rubix ML project that predicts house prices using a Gradient Boosted Machine (GBM) and a popular dataset from a [Kaggle competition](https://www.kaggle.com/c/house-prices-advanced-regression-techniques). In this tutorial, you'll learn about regression and the stage-wise additive boosting ensemble called [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html). By the end of the tutorial, you'll be able to submit your own predictions to the Kaggle competition.
 
 - **Difficulty**: Easy
 - **Training time**: < 5 Minutes
 - **Memory needed**: < 1G
 
 ## Installation
-Clone the repository locally:
+Clone the repository locally using [Git](https://git-scm.com/):
 ```sh
-$ git clone https://github.com/RubixML/Housing
+$ git clone https://github.com/RubixML/Credit
 ```
   
-Install dependencies:
+Install dependencies using [Composer](https://getcomposer.org/):
 ```sh
 $ composer install
 ```
@@ -20,20 +20,17 @@ $ composer install
 - [PHP](https://php.net) 7.1.3 or above
 
 ## Tutorial
-This tutorial is designed to walk you through a typical regression problem in Rubix using the sale price of a home as the target variable. We are given a training set consisting of 1460 labeled samples and 1459 unknown samples. Each sample contains a heterogeneous mix of categorical and continuous data types. Instead of coverting all of the features to one type, we'll choose the [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) regressor because it is capable of handling both data types at once by default.
-
-A Gradient Boosted Machine is a type of *ensemble* estimator that uses [Regression Trees](https://docs.rubixml.com/en/latest/regressors/regression-tree.html) to fix up the errors of a *weak* base estimator. It does so in an iterative process that involves training a new tree (called a *booster*) on the error residuals of the predictions given by the previous estimator. The *Gradient* in the name comes from the fact that the learner uses Gradient Descent under the hood. The coordination between multiple estimators to act as a single estimator is called *ensemble* learning and Gradient Boost is an example of such an estimator.
+[Kaggle](https://www.kaggle.com) is a platform that allows you to test your data science skills by engaging with contests. This tutorial is designed to walk you through a regression problem in Rubix ML using the Kaggle housing prices challenge as an example. We are given a training set consisting of 1460 labeled samples that we'll use to train the learner and 1459 unlabeled samples for making predictions. Each sample contains a heterogeneous mix of categorical and continuous data types. Our goal is to build an estimator that correctly predicts the sale price of a house. We'll choose [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) as our estimator since it is capable of handling both data categorical and continuous data types at once.
 
 ### Training
-The data are given to us in a CSV file so we'll use the PHP League's [CSV Reader](https://csv.thephpleague.com/) to assist us in extracting the data into a [Labeled](https://docs.rubixml.com/en/latest/datasets/labeled.html) dataset object.
+The data are given to us in two separate CSV files - `dataset.csv` which has labels for training and `unknown.csv` for predicting. Each feature column is denoted by a title in the CSV header which we'll use to identify the column. The PHP League's [CSV Reader](https://csv.thephpleague.com/) will assist us in extracting the data from file.
 
-> The source code can be found in the [train.php](https://github.com/RubixML/Housing/blob/master/train.php) file in project root.
+> The source code for this example can be found in the [train.php](https://github.com/RubixML/Housing/blob/master/train.php) file in project root.
 
 ```php
-use Rubix\ML\Datasets\Labeled;
 use League\Csv\Reader;
 
-$reader = Reader::createFromPath(__DIR__ . '/train.csv')
+$reader = Reader::createFromPath(__DIR__ . '/dataset.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
@@ -54,37 +51,30 @@ $samples = $reader->getRecords([
 ]);
 
 $labels = $reader->fetchColumn('SalePrice');
+```
+
+The `getRecords()` and `fetchColumn()` methods on the Reader instance return iterators which we'll now load into a Labeled dataset object using the `fromIterator()` static factory method.
+
+```php
+use Rubix\ML\Datasets\Labeled;
 
 $dataset = Labeled::fromIterator($samples, $labels);
 ```
 
-With the dataset object instantiated we can apply the [Numeric String Converter](https://docs.rubixml.com/en/latest/transformers/numeric-string-converter.html) to convert all numerical strings to their integer and floating point counterparts. This is necessary since the CSV Reader imports everything as a string by default, including the labels.
-
-> **Note**: Since the Numeric String Converter is not a *Stateful* transformer, it can be applied right away without having to be fitted.
+Next we'll apply a series of transformations to the training set to prepare it for the learner. By default, the CSV Reader imports everything as a string type - therefore, we must convert the numerical values to integers and floating point numbers beforehand so they can be recognized by the learner as continuous features. The [Numeric String Converter](https://docs.rubixml.com/en/latest/transformers/numeric-string-converter.html) will handle this for us. Since some feature columns contain missing data, we'll also apply the [Missing Data Imputer](https://docs.rubixml.com/en/latest/transformers/missing-data-imputer.html) which replaces unknown values (denoted by a "?") with a pretty good guess. Lastly, since the labels are also meant to be continuous, we'll apply a separate transformation to the labels of the trainig set using a standard PHP function `intval()` which converts values to integers.
 
 ```php
 use Rubix\ML\Transformers\NumericStringConverter;
+use Rubix\ML\Transformers\MissingDataImputer;
 
-$dataset->apply(new NumericStringConverter());
+$dataset->apply(new NumericStringConverter())
+    ->apply(new MissingDataImputer('?'))
+    ->transformLabels('intval');
 ```
 
-We take care of converting the labels with the `transformLabels()` method on the Labeled dataset object. It takes a function that receives the label and return the transformed label as its only argument. Since the labels of this dataset are the sale prices of each house rounded to the nearest dollar, we'll cast the imported strings (categorical) to integers (continuous) using the built in PHP function `intval()`.
+A Gradient Boosted Machine (GBM) is a type of ensemble estimator that uses [Regression Trees](https://docs.rubixml.com/en/latest/regressors/regression-tree.html) to fix up the errors of a *weak* base learner. It does so in an iterative process that involves training a new Regression Tree (called a *booster*) on the error residuals of the predictions given by the previous estimator. Thus, GBM produces an additive model whose predictions become more refined as the number of boosters are added. The coordination of multiple estimators to act as a single estimator is called *ensemble* learning.
 
-```php
-$dataset->transformLabels('intval');
-```
-
-We'd like to be able to tell if the model we've trained is any good. As such, we'll need to set some of the data aside for testing purposes. Fortunately, dataset objects make it really easy to randomize and split the dataset for you. Let's pick 80% of the data for training and the remaining 20% to be used for testing.
-
-```php
-[$training, $testing] = $dataset->randomize()->split(0.8);
-```
-
-The next item on our list is to instantiate the Gradient Boost learner and wrap it in a Persistent Model meta-Estimator so we can save it for later use. 
-
-The first hyper-parameter is the booster instance i.e the tree that is used to fix up the errors of the base estimator. The step size is controlled by the *rate* hyper-parameter. In addition, you can control the maximum number of iterations with the *estimators* parameter and the ratio of training data to feed into each booster with the *ratio* parameter. For a full list of hyper-parameters, see the [docs](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html).
-
-For this example we use a Regression Tree with max depth of 4 as the boosting estimator, with a learning rate of 0.1.
+Next we'll create the estimator instance by instantiating [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) and wrapping it in a [Persistent Model](https://docs.rubixml.com/en/latest/persistent-model.html) meta-estimator so we can save it to make predictions later in another process.
 
 ```php
 use Rubix\ML\PersistentModel;
@@ -94,77 +84,50 @@ use Rubix\ML\Persisters\Filesystem;
 
 $estimator = new PersistentModel(
     new GradientBoost(new RegressionTree(4), 0.1),
-    new Filesystem(MODEL_FILE, true)
+    new Filesystem('housing.model', true)
 );
 ```
 
-Now, training is simply a matter of passing in the *training* set to the estimator's `train()` method.
+The first two hyper-parameters of Gradient Boost are the booster's settings and the learning rate respectively. For this example, we'll use a standard Regression Tree with a maximum depth of 4 as the booster with a learning rate of 0.1 but feel free to play with these settings on your own.
+
+The Persistent Model meta-estimator takes the GBM instance as its first parameter and a Persister object as the second. The [Filesystem](https://docs.rubixml.com/en/latest/persisters/filesystem.html) persister is responsible for storing and loading the model on disk and takes the path of the model file as a parameter. In addition, we'll tell the persister to keep a copy of every saved model by turning history mode on.
+
+Since both Persistent Model and Gradient Boost implement the [Verbose](https://docs.rubixml.com/en/latest/verbose.html) interface, we can monitor progress during training by setting a logger instance on the learner. The built-in [Screen](https://docs.rubixml.com/en/latest/other/loggers/screen.html) logger will suffice for this example, but you can use any PSR-3 compatible logger.
 
 ```php
-$estimator->train($training);
+$estimator->setLogger(new Screen('housing'));
 ```
 
-Then we'll dump the training loss at each epoch from the training session so we can visualize it.
+Now we're ready to train the learner by calling the `train()` method with the training dataset.
 
 ```php
+$estimator->train($dataset);
+```
+
+During training, the learner will record the validation score and the training loss at each epoch. The validation score is calculated using the default [R Squared](https://docs.rubixml.com/en/latest/cross-validation/metrics/r-squared.html) metric on a hold out portion of the training set. Contrariwise, the training loss is the value of the cost function (in this case the L2 loss) computed over the training data. We can vizualize the training progress by plotting these metrics. To export the scores and losses you can call the additional `scores()` and `steps()` methods respectively.
+
+```php
+$scores = $estimator->scores();
+
 $steps = $estimator->steps();
 ```
 
-Here is an example of what the training loss looks like when its plotted. You can plot the loss yourself by importing the `progress.csv` file into your favorite plotting software. If you're looking for a place to start, we recommend either [Tableu](https://public.tableau.com/en-us/s/) or [Google Sheets](https://www.google.com/sheets/about/).
+Here is an example of what the training loss looks like when its plotted. You can plot the loss yourself by importing the `progress.csv` file into your favorite plotting software.
 
 ![MSE Loss](https://raw.githubusercontent.com/RubixML/Housing/master/docs/images/training-loss.svg?sanitize=true)
 
-The remaining data left in the *testing* set is used to generate a [Residual Analysis](https://docs.rubixml.com/en/latest/cross-validation/reports/residual-analysis.html) report which ouputs a number of validation metrics including Mean Absolute Error (MAE), Mean Squared Error (MSE), and R Squared (R2). To generate the report we'll need the predictions from the estimator and the labels from the testing set. Lastly, we'll save the report to a JSON file so we can review the performance before saving the model to storage.
-
-```php
-use Rubix\ML\CrossValidation\Reports\ResidualAnalysis;
-
-$predictions = $estimator->predict($testing);
-
-$report = new ResidualAnalysis();
-
-$results = $report->generate($predictions, $testing->labels());
-```
-
-The results will look something like this.
-
-```json
-{
-    "mean_absolute_error": 14528.340820915579,
-    "median_absolute_error": 10549.487747601735,
-    "mean_absolute_percentage_error": 8.911117077298245,
-    "mean_squared_error": 397960732.04236144,
-    "rms_error": 19948.95315655339,
-    "mean_squared_log_error": 0.01637578248729187,
-    "r_squared": 0.8986000796796421,
-    "error_mean": 44.38514176512214,
-    "error_variance": 397958762.0015515,
-    "error_skewness": 0.018759888007460087,
-    "error_kurtosis": 2.103139242198865,
-    "error_min": -80358.30060322193,
-    "error_max": 84035.54964507371,
-    "cardinality": 292
-}
-```
-
-Finally, save the model so we can use it later to predict prices of unknown samples.
+Lastly, save the model so it can be used later to predict the house prices of the unknown samples.
 
 ```php
 $estimator->save();
 ```
 
-To run the training script from the project root:
-```sh
-$ php train.php
-```
+### Inference
+The goal of the Kaggle contest is to predict the correct sale prices of each house given a list of unknown samples. If all went well during training, we should be able to achieve good results with just this basic example. We'll start by importing the unknown samples from the `unknown.csv` file.
 
-### Prediction
-The model we trained will now be used to generate predictions to submit to the Kaggle competition. We'll load the unknown samples from the `unknown.csv` file into an Unlabeled dataset object and keep track of their *Id* number in a separate array for later.
-
-> The source code can be found in the [predict.php](https://github.com/RubixML/Housing/blob/master/predict.php) file in the project root.
+> The source code for this example can be found in the [predict.php](https://github.com/RubixML/Housing/blob/master/predict.php) file in the project root.
 
 ```php
-use Rubix\ML\Datasets\Unlabeled;
 use League\Csv\Reader;
 
 $reader = Reader::createFromPath(__DIR__ . '/unknown.csv')
@@ -188,11 +151,19 @@ $samples = $reader->getRecords([
 ]);
 
 $ids = iterator_to_array($reader->fetchColumn('Id'));
+```
+
+Notice that we are also importing the ID numbers from the ID column into a separate array. We'll need these numbers along with our predictions to submit to the contest.
+
+Since the samples in `unknown.csv` are unlabeled we'll need an [Unlabeled](https://docs.rubixml.com/en/latest/datasets/unlabeled.html) dataset object this time.
+
+```php
+use Rubix\ML\Datasets\Unlabeled;
 
 $dataset = Unlabeled::fromIterator($samples);
 ```
 
-Loading the trained Gradient Boost estimator can be done by passing a [Persister](https://docs.rubixml.com/en/latest/persisters/api.html) instance pointing to the model in storage to the [Persistent Model](https://docs.rubixml.com/en/latest/persistent-model.html) meta-Estimator.
+Now let's load the persisted Gradient Boost model from storage using the static `load()` method on Persitent Model. Loading can be done by passing a [Persister](https://docs.rubixml.com/en/latest/persisters/api.html) instance pointing to the model in storage.
 
 ```php
 use Rubix\ML\PersistentModel;
@@ -201,7 +172,7 @@ use Rubix\ML\Persisters\Filesystem;
 $estimator = PersistentModel::load(new Filesystem('housing.model'));
 ```
 
-Now just call `predict()` with the unknown dataset and write the predictions to a CSV file with their cooresponding Ids. An example of a sample submission can be found in the `sample_submission.csv` file.
+To obtain the predictions from the model, simply call `predict()` with the dataset. Then submit those predictions along with their IDs to the [contest page](https://www.kaggle.com/c/house-prices-advanced-regression-techniques).
 
 ```php
 $predictions = $estimator->predict($dataset);
@@ -209,18 +180,13 @@ $predictions = $estimator->predict($dataset);
 
 That's it! Best of luck on the competition!
 
-To run the prediction script from the project root:
-```sh
-$ php predict.php
-```
-
 ### Wrapup
 
-- Regressors predict *continuous* valued outcomes such as house or stock prices
+- Regressors are a type of estimator that predict continuous valued outcomes such as house prices
 - Ensemble learning combines the predictions of multiple estimators into one
-- The Gradient Boost regressor is an ensemble learner that uses trees to fix the errors of a *weak* base estimator
-- Gradient Boost can *by default* handle both categorical and continuous data types
-- Data competitions are a great way to practice your data science skills
+- The Gradient Boost regressor is an ensemble learner that uses Regression Trees to fix the errors of a *weak* base estimator
+- Gradient Boost can handle both categorical and continuous data types by default
+- Data science competitions are a great way to practice your skills
 
 ## Original Dataset
 From Kaggle:

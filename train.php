@@ -8,23 +8,16 @@ use Rubix\ML\Other\Loggers\Screen;
 use Rubix\ML\Persisters\Filesystem;
 use Rubix\ML\Regressors\GradientBoost;
 use Rubix\ML\Regressors\RegressionTree;
-use Rubix\ML\Regressors\ExtraTreeRegressor;
 use Rubix\ML\Transformers\MissingDataImputer;
 use Rubix\ML\Transformers\NumericStringConverter;
-use Rubix\ML\CrossValidation\Metrics\SMAPE;
-use Rubix\ML\CrossValidation\Reports\ResidualAnalysis;
 use League\Csv\Reader;
 use League\Csv\Writer;
-
-const MODEL_FILE = 'housing.model';
-const PROGRESS_FILE = 'progress.csv';
-const REPORT_FILE = 'report.json';
 
 ini_set('memory_limit', '-1');
 
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
-echo '║ Housing Price Predictor using a Gradient Boosted Machine      ║' . PHP_EOL;
+echo '║ House Price Predictor using a Gradient Boosted Machine        ║' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
 echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
 echo PHP_EOL;
@@ -55,36 +48,27 @@ $labels = $reader->fetchColumn('SalePrice');
 
 $dataset = Labeled::fromIterator($samples, $labels);
 
-$dataset->apply(new NumericStringConverter());
-$dataset->apply(new MissingDataImputer('?'));
-
-$dataset->transformLabels('intval');
-
-[$training, $testing] = $dataset->randomize()->split(0.8);
+$dataset->apply(new NumericStringConverter())
+    ->apply(new MissingDataImputer('?'))
+    ->transformLabels('intval');
 
 $estimator = new PersistentModel(
     new GradientBoost(new RegressionTree(4), 0.1),
-    new Filesystem(MODEL_FILE, true)
+    new Filesystem('housing.model', true)
 );
 
 $estimator->setLogger(new Screen('housing'));
 
-$estimator->train($training);
+$estimator->train($dataset);
 
-$writer = Writer::createFromPath(PROGRESS_FILE, 'w+');
-$writer->insertOne(['loss']);
-$writer->insertAll(array_map(null, $estimator->steps(), []));
+$scores = $estimator->scores();
+$steps = $estimator->steps();
 
-$predictions = $estimator->predict($testing);
+$writer = Writer::createFromPath('progress.csv', 'w+');
+$writer->insertOne(['score', 'loss']);
+$writer->insertAll(array_map(null, $scores, $steps));
 
-$report = new ResidualAnalysis();
-
-$results = $report->generate($predictions, $testing->labels());
-
-file_put_contents(REPORT_FILE, json_encode($results, JSON_PRETTY_PRINT));
-
-echo 'Progress saved to ' . PROGRESS_FILE . PHP_EOL;
-echo 'Report saved to ' . REPORT_FILE . PHP_EOL;
+echo 'Progress saved to progress.csv' . PHP_EOL;
 
 if (strtolower(readline('Save this model? (y|[n]): ')) === 'y') {
     $estimator->save();

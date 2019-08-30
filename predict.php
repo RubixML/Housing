@@ -5,17 +5,15 @@ include __DIR__ . '/vendor/autoload.php';
 use Rubix\ML\PersistentModel;
 use Rubix\ML\Datasets\Unlabeled;
 use Rubix\ML\Persisters\Filesystem;
+use Rubix\ML\Transformers\NumericStringConverter;
 use League\Csv\Reader;
 use League\Csv\Writer;
-
-const MODEL_FILE = 'housing.model';
-const PREDICTIONS_FILE = 'predictions.csv';
 
 ini_set('memory_limit', '-1');
 
 echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
-echo '║ House Prices Predictor using Gradient Boosted Machine         ║' . PHP_EOL;
+echo '║ House Price Predictor using a Gradient Boosted Machine        ║' . PHP_EOL;
 echo '║                                                               ║' . PHP_EOL;
 echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
 echo PHP_EOL;
@@ -46,12 +44,14 @@ $ids = iterator_to_array($reader->fetchColumn('Id'));
 
 $dataset = Unlabeled::fromIterator($samples);
 
-$estimator = PersistentModel::load(new Filesystem(MODEL_FILE));
+$dataset->apply(new NumericStringConverter());
+
+$estimator = PersistentModel::load(new Filesystem('housing.model'));
 
 $predictions = $estimator->predict($dataset);
 
-$writer = Writer::createFromPath(PREDICTIONS_FILE, 'w+');
+$writer = Writer::createFromPath('predictions.csv', 'w+');
 $writer->insertOne(['Id', 'SalePrice']);
 $writer->insertAll(array_map(null, $ids, $predictions));
 
-echo 'Predictions saved to ' . PREDICTIONS_FILE . PHP_EOL;
+echo 'Predictions saved to predictions.csv' . PHP_EOL;
