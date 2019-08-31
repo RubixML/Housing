@@ -119,9 +119,11 @@ $scores = $estimator->scores();
 $losses = $estimator->steps();
 ```
 
-Here is an example of what the training loss looks like when its plotted. You can plot the loss yourself by importing the `progress.csv` file into your favorite plotting software.
+Here is an example of what the validation score and training loss looks like when they are plotted. You can plot the loss yourself by importing the `progress.csv` file into your favorite plotting software.
 
-![MSE Loss](https://raw.githubusercontent.com/RubixML/Housing/master/docs/images/training-loss.svg?sanitize=true)
+![R Squared Score](https://raw.githubusercontent.com/RubixML/Housing/master/docs/images/validation-score.svg?sanitize=true)
+
+![L2 Loss](https://raw.githubusercontent.com/RubixML/Housing/master/docs/images/training-loss.svg?sanitize=true)
 
 
 ### Saving
