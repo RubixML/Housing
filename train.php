@@ -62,11 +62,11 @@ $estimator->setLogger(new Screen('housing'));
 $estimator->train($dataset);
 
 $scores = $estimator->scores();
-$steps = $estimator->steps();
+$losses = $estimator->steps();
 
 $writer = Writer::createFromPath('progress.csv', 'w+');
 $writer->insertOne(['score', 'loss']);
-$writer->insertAll(array_map(null, $scores, $steps));
+$writer->insertAll(array_map(null, $scores, $losses));
 
 echo 'Progress saved to progress.csv' . PHP_EOL;
 
