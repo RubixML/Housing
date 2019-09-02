@@ -1,8 +1,8 @@
 # Housing Price Predictor
 An example Rubix ML project that predicts house prices using a Gradient Boosted Machine (GBM) and a popular dataset from a [Kaggle competition](https://www.kaggle.com/c/house-prices-advanced-regression-techniques). In this tutorial, you'll learn about regression and the stage-wise additive boosting ensemble called [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html). By the end of the tutorial, you'll be able to submit your own predictions to the Kaggle competition.
 
-- **Difficulty**: Easy
-- **Training time**: < 5 Minutes
+- **Difficulty**: Medium
+- **Training time**: Minutes
 - **Memory needed**: < 1G
 
 ## Installation
