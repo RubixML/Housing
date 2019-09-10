@@ -3,7 +3,7 @@ An example Rubix ML project that predicts house prices using a Gradient Boosted 
 
 - **Difficulty**: Medium
 - **Training time**: Minutes
-- **Memory needed**: < 1G
+- **Memory needed**: 1G
 
 ## Installation
 Clone the repository locally using [Git](https://git-scm.com/):
@@ -32,7 +32,7 @@ The data are given to us in two separate CSV files - `dataset.csv` which has lab
 ```php
 use League\Csv\Reader;
 
-$reader = Reader::createFromPath(__DIR__ . '/dataset.csv')
+$reader = Reader::createFromPath('dataset.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
@@ -143,7 +143,7 @@ The goal of the Kaggle contest is to predict the correct sale prices of each hou
 ```php
 use League\Csv\Reader;
 
-$reader = Reader::createFromPath(__DIR__ . '/unknown.csv')
+$reader = Reader::createFromPath('unknown.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
@@ -193,7 +193,7 @@ To obtain the predictions from the model, simply call `predict()` with the datas
 $predictions = $estimator->predict($dataset);
 ```
 
-That's it! Best of luck on the competition!
+That's it! Good luck on the competition!
 
 ### Wrapup
 

@@ -20,7 +20,7 @@ echo PHP_EOL;
 
 echo 'Loading data into memory ...' . PHP_EOL;
 
-$reader = Reader::createFromPath(__DIR__ . '/unknown.csv')
+$reader = Reader::createFromPath('unknown.csv')
     ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
