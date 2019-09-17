@@ -4,23 +4,18 @@ include __DIR__ . '/vendor/autoload.php';
 
 use Rubix\ML\PersistentModel;
 use Rubix\ML\Datasets\Labeled;
-use Rubix\ML\Other\Loggers\Screen;
-use Rubix\ML\Persisters\Filesystem;
+use Rubix\ML\Transformers\NumericStringConverter;
+use Rubix\ML\Transformers\MissingDataImputer;
 use Rubix\ML\Regressors\GradientBoost;
 use Rubix\ML\Regressors\RegressionTree;
-use Rubix\ML\Transformers\MissingDataImputer;
-use Rubix\ML\Transformers\NumericStringConverter;
+use Rubix\ML\Persisters\Filesystem;
+use Rubix\ML\Other\Loggers\Screen;
 use League\Csv\Reader;
 use League\Csv\Writer;
 
-ini_set('memory_limit', '-1');
+use function Rubix\ML\array_transpose;
 
-echo '╔═══════════════════════════════════════════════════════════════╗' . PHP_EOL;
-echo '║                                                               ║' . PHP_EOL;
-echo '║ House Price Predictor using a Gradient Boosted Machine        ║' . PHP_EOL;
-echo '║                                                               ║' . PHP_EOL;
-echo '╚═══════════════════════════════════════════════════════════════╝' . PHP_EOL;
-echo PHP_EOL;
+ini_set('memory_limit', '-1');
 
 echo 'Loading data into memory ...' . PHP_EOL;
 
@@ -29,19 +24,21 @@ $reader = Reader::createFromPath('dataset.csv')
 
 $samples = $reader->getRecords([
     'MSSubClass', 'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
-    'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope', 'Neighborhood',
-    'Condition1', 'Condition2', 'BldgType', 'HouseStyle', 'OverallQual', 'OverallCond',
-    'YearBuilt', 'YearRemodAdd', 'RoofStyle', 'RoofMatl', 'Exterior1st', 'Exterior2nd',
-    'MasVnrType', 'MasVnrArea', 'ExterQual', 'ExterCond', 'Foundation', 'BsmtQual',
-    'BsmtCond', 'BsmtExposure', 'BsmtFinType1', 'BsmtFinSF1', 'BsmtFinType2',
-    'BsmtFinSF2', 'BsmtUnfSF', 'TotalBsmtSF', 'Heating', 'HeatingQC', 'CentralAir',
-    'Electrical', '1stFlrSF', '2ndFlrSF', 'LowQualFinSF', 'GrLivArea', 'BsmtFullBath',
-    'BsmtHalfBath', 'FullBath', 'HalfBath', 'BedroomAbvGr', 'KitchenAbvGr', 'KitchenQual',
-    'TotRmsAbvGrd', 'Functional', 'Fireplaces', 'FireplaceQu', 'GarageType',
-    'GarageYrBlt', 'GarageFinish', 'GarageCars', 'GarageArea', 'GarageQual',
-    'GarageCond', 'PavedDrive', 'WoodDeckSF', 'OpenPorchSF', 'EnclosedPorch',
-    '3SsnPorch', 'ScreenPorch', 'PoolArea', 'PoolQC', 'Fence', 'MiscFeature',
-    'MiscVal', 'MoSold', 'YrSold', 'SaleType', 'SaleCondition',
+    'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope',
+    'Neighborhood', 'Condition1', 'Condition2', 'BldgType', 'HouseStyle',
+    'OverallQual', 'OverallCond', 'YearBuilt', 'YearRemodAdd', 'RoofStyle',
+    'RoofMatl', 'Exterior1st', 'Exterior2nd', 'MasVnrType', 'MasVnrArea',
+    'ExterQual', 'ExterCond', 'Foundation', 'BsmtQual', 'BsmtCond',
+    'BsmtExposure', 'BsmtFinType1', 'BsmtFinSF1', 'BsmtFinType2', 'BsmtFinSF2',
+    'BsmtUnfSF', 'TotalBsmtSF', 'Heating', 'HeatingQC', 'CentralAir',
+    'Electrical', '1stFlrSF', '2ndFlrSF', 'LowQualFinSF', 'GrLivArea',
+    'BsmtFullBath', 'BsmtHalfBath', 'FullBath', 'HalfBath', 'BedroomAbvGr',
+    'KitchenAbvGr', 'KitchenQual', 'TotRmsAbvGrd', 'Functional', 'Fireplaces',
+    'FireplaceQu', 'GarageType', 'GarageYrBlt', 'GarageFinish', 'GarageCars',
+    'GarageArea', 'GarageQual', 'GarageCond', 'PavedDrive', 'WoodDeckSF',
+    'OpenPorchSF', 'EnclosedPorch', '3SsnPorch', 'ScreenPorch', 'PoolArea',
+    'PoolQC', 'Fence', 'MiscFeature', 'MiscVal', 'MoSold', 'YrSold',
+    'SaleType', 'SaleCondition',
 ]);
 
 $labels = $reader->fetchColumn('SalePrice');
@@ -66,7 +63,7 @@ $losses = $estimator->steps();
 
 $writer = Writer::createFromPath('progress.csv', 'w+');
 $writer->insertOne(['score', 'loss']);
-$writer->insertAll(array_map(null, $scores, $losses));
+$writer->insertAll(array_transpose([$scores, $losses]));
 
 echo 'Progress saved to progress.csv' . PHP_EOL;
 

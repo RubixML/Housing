@@ -1,9 +1,9 @@
-# Housing Price Predictor
+# Rubix ML - Housing Price Predictor
 An example Rubix ML project that predicts house prices using a Gradient Boosted Machine (GBM) and a popular dataset from a [Kaggle competition](https://www.kaggle.com/c/house-prices-advanced-regression-techniques). In this tutorial, you'll learn about regression and the stage-wise additive boosting ensemble called [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html). By the end of the tutorial, you'll be able to submit your own predictions to the Kaggle competition.
 
-- **Difficulty**: Medium
-- **Training time**: Minutes
-- **Memory needed**: 1G
+- **Difficulty:** Medium
+- **Training time:** Minutes
+- **Memory needed:** 1G
 
 ## Installation
 Clone the repository locally using [Git](https://git-scm.com/):
@@ -37,25 +37,26 @@ $reader = Reader::createFromPath('dataset.csv')
 
 $samples = $reader->getRecords([
     'MSSubClass', 'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
-    'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope', 'Neighborhood',
-    'Condition1', 'Condition2', 'BldgType', 'HouseStyle', 'OverallQual', 'OverallCond',
-    'YearBuilt', 'YearRemodAdd', 'RoofStyle', 'RoofMatl', 'Exterior1st', 'Exterior2nd',
-    'MasVnrType', 'MasVnrArea', 'ExterQual', 'ExterCond', 'Foundation', 'BsmtQual',
-    'BsmtCond', 'BsmtExposure', 'BsmtFinType1', 'BsmtFinSF1', 'BsmtFinType2',
-    'BsmtFinSF2', 'BsmtUnfSF', 'TotalBsmtSF', 'Heating', 'HeatingQC', 'CentralAir',
-    'Electrical', '1stFlrSF', '2ndFlrSF', 'LowQualFinSF', 'GrLivArea', 'BsmtFullBath',
-    'BsmtHalfBath', 'FullBath', 'HalfBath', 'BedroomAbvGr', 'KitchenAbvGr', 'KitchenQual',
-    'TotRmsAbvGrd', 'Functional', 'Fireplaces', 'FireplaceQu', 'GarageType',
-    'GarageYrBlt', 'GarageFinish', 'GarageCars', 'GarageArea', 'GarageQual',
-    'GarageCond', 'PavedDrive', 'WoodDeckSF', 'OpenPorchSF', 'EnclosedPorch',
-    '3SsnPorch', 'ScreenPorch', 'PoolArea', 'PoolQC', 'Fence', 'MiscFeature',
-    'MiscVal', 'MoSold', 'YrSold', 'SaleType', 'SaleCondition',
+    'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope',
+    'Neighborhood', 'Condition1', 'Condition2', 'BldgType', 'HouseStyle',
+    'OverallQual', 'OverallCond', 'YearBuilt', 'YearRemodAdd', 'RoofStyle',
+    'RoofMatl', 'Exterior1st', 'Exterior2nd', 'MasVnrType', 'MasVnrArea',
+    'ExterQual', 'ExterCond', 'Foundation', 'BsmtQual', 'BsmtCond',
+    'BsmtExposure', 'BsmtFinType1', 'BsmtFinSF1', 'BsmtFinType2', 'BsmtFinSF2',
+    'BsmtUnfSF', 'TotalBsmtSF', 'Heating', 'HeatingQC', 'CentralAir',
+    'Electrical', '1stFlrSF', '2ndFlrSF', 'LowQualFinSF', 'GrLivArea',
+    'BsmtFullBath', 'BsmtHalfBath', 'FullBath', 'HalfBath', 'BedroomAbvGr',
+    'KitchenAbvGr', 'KitchenQual', 'TotRmsAbvGrd', 'Functional', 'Fireplaces',
+    'FireplaceQu', 'GarageType', 'GarageYrBlt', 'GarageFinish', 'GarageCars',
+    'GarageArea', 'GarageQual', 'GarageCond', 'PavedDrive', 'WoodDeckSF',
+    'OpenPorchSF', 'EnclosedPorch', '3SsnPorch', 'ScreenPorch', 'PoolArea',
+    'PoolQC', 'Fence', 'MiscFeature', 'MiscVal', 'MoSold', 'YrSold',
+    'SaleType', 'SaleCondition',
 ]);
 
 $labels = $reader->fetchColumn('SalePrice');
 ```
 
-### Dataset Preparation
 The `getRecords()` and `fetchColumn()` methods on the Reader instance return iterators which we'll now load into a Labeled dataset object using the `fromIterator()` static factory method.
 
 ```php
@@ -64,6 +65,7 @@ use Rubix\ML\Datasets\Labeled;
 $dataset = Labeled::fromIterator($samples, $labels);
 ```
 
+### Dataset Preparation
 Next we'll apply a series of transformations to the training set to prepare it for the learner. By default, the CSV Reader imports everything as a string type - therefore, we must convert the numerical values to integers and floating point numbers beforehand so they can be recognized by the learner as continuous features. The [Numeric String Converter](https://docs.rubixml.com/en/latest/transformers/numeric-string-converter.html) will handle this for us. Since some feature columns contain missing data, we'll also apply the [Missing Data Imputer](https://docs.rubixml.com/en/latest/transformers/missing-data-imputer.html) which replaces unknown values (denoted by a "?") with a pretty good guess. Lastly, since the labels are also meant to be continuous, we'll apply a separate transformation to the labels of the training set using a standard PHP function `intval()` which converts values to integers.
 
 ```php
@@ -92,9 +94,9 @@ $estimator = new PersistentModel(
 );
 ```
 
-The first two hyper-parameters of Gradient Boost are the booster's settings and the learning rate, respectively. For this example, we'll use a standard Regression Tree with a maximum depth of 4 as the booster with a learning rate of 0.1 but feel free to play with these settings on your own.
+The first two hyper-parameters of Gradient Boost are the booster's settings and the learning rate, respectively. For this example, we'll use a standard Regression Tree with a maximum depth of 4 as the booster and a learning rate of 0.1 but feel free to play with these settings on your own.
 
-The Persistent Model meta-estimator takes the GBM instance as its first parameter and a Persister object as the second. The [Filesystem](https://docs.rubixml.com/en/latest/persisters/filesystem.html) persister is responsible for storing and loading the model on disk and takes the path of the model file as a parameter. In addition, we'll tell the persister to keep a copy of every saved model by turning history mode on.
+The Persistent Model meta-estimator takes the GBM learner instance as its first parameter and a Persister object as the second. The [Filesystem](https://docs.rubixml.com/en/latest/persisters/filesystem.html) persister is responsible for storing and loading the model on disk and takes the path of the model file as a parameter. In addition, we'll tell the persister to keep a copy of every saved model by turning history mode on.
 
 ### Setting a Logger
 Since both Persistent Model and Gradient Boost implement the [Verbose](https://docs.rubixml.com/en/latest/verbose.html) interface, we can monitor progress during training by setting a logger instance on the learner. The built-in [Screen](https://docs.rubixml.com/en/latest/other/loggers/screen.html) logger will suffice for this example, but you can use any PSR-3 compatible logger.
@@ -148,19 +150,21 @@ $reader = Reader::createFromPath('unknown.csv')
 
 $samples = $reader->getRecords([
     'MSSubClass', 'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
-    'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope', 'Neighborhood',
-    'Condition1', 'Condition2', 'BldgType', 'HouseStyle', 'OverallQual', 'OverallCond',
-    'YearBuilt', 'YearRemodAdd', 'RoofStyle', 'RoofMatl', 'Exterior1st', 'Exterior2nd',
-    'MasVnrType', 'MasVnrArea', 'ExterQual', 'ExterCond', 'Foundation', 'BsmtQual',
-    'BsmtCond', 'BsmtExposure', 'BsmtFinType1', 'BsmtFinSF1', 'BsmtFinType2',
-    'BsmtFinSF2', 'BsmtUnfSF', 'TotalBsmtSF', 'Heating', 'HeatingQC', 'CentralAir',
-    'Electrical', '1stFlrSF', '2ndFlrSF', 'LowQualFinSF', 'GrLivArea', 'BsmtFullBath',
-    'BsmtHalfBath', 'FullBath', 'HalfBath', 'BedroomAbvGr', 'KitchenAbvGr', 'KitchenQual',
-    'TotRmsAbvGrd', 'Functional', 'Fireplaces', 'FireplaceQu', 'GarageType',
-    'GarageYrBlt', 'GarageFinish', 'GarageCars', 'GarageArea', 'GarageQual',
-    'GarageCond', 'PavedDrive', 'WoodDeckSF', 'OpenPorchSF', 'EnclosedPorch',
-    '3SsnPorch', 'ScreenPorch', 'PoolArea', 'PoolQC', 'Fence', 'MiscFeature',
-    'MiscVal', 'MoSold', 'YrSold', 'SaleType', 'SaleCondition',
+    'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope',
+    'Neighborhood', 'Condition1', 'Condition2', 'BldgType', 'HouseStyle',
+    'OverallQual', 'OverallCond', 'YearBuilt', 'YearRemodAdd', 'RoofStyle',
+    'RoofMatl', 'Exterior1st', 'Exterior2nd', 'MasVnrType', 'MasVnrArea',
+    'ExterQual', 'ExterCond', 'Foundation', 'BsmtQual', 'BsmtCond',
+    'BsmtExposure', 'BsmtFinType1', 'BsmtFinSF1', 'BsmtFinType2', 'BsmtFinSF2',
+    'BsmtUnfSF', 'TotalBsmtSF', 'Heating', 'HeatingQC', 'CentralAir',
+    'Electrical', '1stFlrSF', '2ndFlrSF', 'LowQualFinSF', 'GrLivArea',
+    'BsmtFullBath', 'BsmtHalfBath', 'FullBath', 'HalfBath', 'BedroomAbvGr',
+    'KitchenAbvGr', 'KitchenQual', 'TotRmsAbvGrd', 'Functional', 'Fireplaces',
+    'FireplaceQu', 'GarageType', 'GarageYrBlt', 'GarageFinish', 'GarageCars',
+    'GarageArea', 'GarageQual', 'GarageCond', 'PavedDrive', 'WoodDeckSF',
+    'OpenPorchSF', 'EnclosedPorch', '3SsnPorch', 'ScreenPorch', 'PoolArea',
+    'PoolQC', 'Fence', 'MiscFeature', 'MiscVal', 'MoSold', 'YrSold',
+    'SaleType', 'SaleCondition',
 ]);
 
 $ids = iterator_to_array($reader->fetchColumn('Id'));
@@ -195,16 +199,16 @@ $predictions = $estimator->predict($dataset);
 
 That's it! Good luck on the competition!
 
-### Wrapup
+### Wrap Up
 
 - Regressors are a type of estimator that predict continuous valued outcomes such as house prices.
 - Ensemble learning combines the predictions of multiple estimators into one.
-- The Gradient Boost regressor is an ensemble learner that uses Regression Trees to fix the errors of a *weak* base estimator.
+- The [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) regressor is an ensemble learner that uses Regression Trees to fix the errors of a *weak* base estimator.
 - Gradient Boost can handle both categorical and continuous data types by default.
 - Data science competitions are a great way to practice your machine learning skills.
 
 ### Next Steps
-Have a look at the Gradient Boost [documentation page](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) for a description of all the hyper-parameters. Try tuning those parameters for better results. Consider filtering out noise samples from the dataset by using methods on the dataset object. For example, you may want to remove extremely large and expensive houses from the training set.
+Have a look at the Gradient Boost [documentation](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) page to get a better sense of what the learner can do. Try tuning the hyper-parameters for better results. Consider filtering out noise samples from the dataset by using methods on the dataset object. For example, you may want to remove extremely large and expensive houses from the training set.
 
 ## Original Dataset
 From Kaggle:
@@ -214,4 +218,4 @@ From Kaggle:
 > With 79 explanatory variables describing (almost) every aspect of residential homes in Ames, Iowa, this competition challenges you to predict the final price of each home.
 
 ### References
-[1] D. De Cock. (2011). Ames, Iowa: Alternative to the Boston Housing Data as an End of Semester Regression Project. Journal of Statistics Education, Volume 19, Number 3.
+>- D. De Cock. (2011). Ames, Iowa: Alternative to the Boston Housing Data as an End of Semester Regression Project. Journal of Statistics Education, Volume 19, Number 3.
