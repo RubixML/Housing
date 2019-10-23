@@ -46,7 +46,7 @@ $labels = $reader->fetchColumn('SalePrice');
 $dataset = Labeled::fromIterator($samples, $labels);
 
 $dataset->apply(new NumericStringConverter())
-    ->apply(new MissingDataImputer('?'))
+    ->apply(new MissingDataImputer())
     ->transformLabels('intval');
 
 $estimator = new PersistentModel(

@@ -66,14 +66,14 @@ $dataset = Labeled::fromIterator($samples, $labels);
 ```
 
 ### Dataset Preparation
-Next we'll apply a series of transformations to the training set to prepare it for the learner. By default, the CSV Reader imports everything as a string type - therefore, we must convert the numerical values to integers and floating point numbers beforehand so they can be recognized by the learner as continuous features. The [Numeric String Converter](https://docs.rubixml.com/en/latest/transformers/numeric-string-converter.html) will handle this for us. Since some feature columns contain missing data, we'll also apply the [Missing Data Imputer](https://docs.rubixml.com/en/latest/transformers/missing-data-imputer.html) which replaces unknown values (denoted by a "?") with a pretty good guess. Lastly, since the labels are also meant to be continuous, we'll apply a separate transformation to the labels of the training set using a standard PHP function `intval()` which converts values to integers.
+Next we'll apply a series of transformations to the training set to prepare it for the learner. By default, the CSV Reader imports everything as a string type - therefore, we must convert the numerical values to integers and floating point numbers beforehand so they can be recognized by the learner as continuous features. The [Numeric String Converter](https://docs.rubixml.com/en/latest/transformers/numeric-string-converter.html) will handle this for us. Since some feature columns contain missing data, we'll also apply the [Missing Data Imputer](https://docs.rubixml.com/en/latest/transformers/missing-data-imputer.html) which replaces missing values with a pretty good guess. Lastly, since the labels are also meant to be continuous, we'll apply a separate transformation to the labels of the training set using a standard PHP function `intval()` which converts values to integers.
 
 ```php
 use Rubix\ML\Transformers\NumericStringConverter;
 use Rubix\ML\Transformers\MissingDataImputer;
 
 $dataset->apply(new NumericStringConverter())
-    ->apply(new MissingDataImputer('?'))
+    ->apply(new MissingDataImputer())
     ->transformLabels('intval');
 ```
 
