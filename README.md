@@ -22,7 +22,7 @@ $ composer install
 ## Tutorial
 
 ### Introduction
-[Kaggle](https://www.kaggle.com) is a platform that allows you to test your data science skills by engaging with contests. This tutorial is designed to walk you through a regression problem in Rubix ML using the Kaggle housing prices challenge as an example. We are given a training set consisting of 1,460 labeled samples that we'll use to train the learner and 1,459 unlabeled samples for making predictions. Each sample contains a heterogeneous mix of categorical and continuous data types. Our goal is to build an estimator that correctly predicts the sale price of a house. We'll choose [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) as our estimator since it is capable of handling both data categorical and continuous data types at once.
+[Kaggle](https://www.kaggle.com) is a platform that allows you to test your data science skills by engaging with contests. This tutorial is designed to walk you through a regression problem in Rubix ML using the Kaggle housing prices challenge as an example. We are given a training set consisting of 1,460 labeled samples that we'll use to train the learner and 1,459 unlabeled samples for making predictions. Each sample contains a heterogeneous mix of categorical and continuous data types. Our goal is to build an estimator that correctly predicts the sale price of a house. We'll choose [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) as our estimator since it is capable of handling both categorical and continuous data types at the same time.
 
 > **Note:** The source code for this example can be found in the [train.php](https://github.com/RubixML/Housing/blob/master/train.php) file in project root.
 
@@ -57,7 +57,7 @@ $samples = $reader->getRecords([
 $labels = $reader->fetchColumn('SalePrice');
 ```
 
-The `getRecords()` and `fetchColumn()` methods on the Reader instance return iterators which we'll now load into a Labeled dataset object using the `fromIterator()` static factory method.
+The `getRecords()` and `fetchColumn()` methods on the Reader instance return iterators which we'll load into a Labeled dataset object using the `fromIterator()` static factory method.
 
 ```php
 use Rubix\ML\Datasets\Labeled;
@@ -66,7 +66,7 @@ $dataset = Labeled::fromIterator($samples, $labels);
 ```
 
 ### Dataset Preparation
-Next we'll apply a series of transformations to the training set to prepare it for the learner. By default, the CSV Reader imports everything as a string type - therefore, we must convert the numerical values to integers and floating point numbers beforehand so they can be recognized by the learner as continuous features. The [Numeric String Converter](https://docs.rubixml.com/en/latest/transformers/numeric-string-converter.html) will handle this for us. Since some feature columns contain missing data, we'll also apply the [Missing Data Imputer](https://docs.rubixml.com/en/latest/transformers/missing-data-imputer.html) which replaces missing values with a pretty good guess. Lastly, since the labels are also meant to be continuous, we'll apply a separate transformation to the labels of the training set using a standard PHP function `intval()` which converts values to integers.
+Next we'll apply a series of transformations to the training set to prepare it for the learner. By default, the CSV Reader imports everything as a string - therefore, we must convert the numerical values to integers and floating point numbers beforehand so they can be recognized by the learner as continuous features. The [Numeric String Converter](https://docs.rubixml.com/en/latest/transformers/numeric-string-converter.html) will handle this for us. Since some feature columns contain missing data, we'll also apply the [Missing Data Imputer](https://docs.rubixml.com/en/latest/transformers/missing-data-imputer.html) which replaces missing values with a pretty good guess. Lastly, since the labels are also meant to be continuous, we'll apply a separate transformation to the labels of the training set using a standard PHP function `intval()` which converts values to integers.
 
 ```php
 use Rubix\ML\Transformers\NumericStringConverter;
@@ -181,7 +181,7 @@ $dataset = Unlabeled::fromIterator($samples);
 ```
 
 ### Load Model from Storage
-Now, let's load the persisted Gradient Boost model from storage using the static `load()` method on Persitent Model. Loading can be done by passing a [Persister](https://docs.rubixml.com/en/latest/persisters/api.html) instance pointing to the model in storage.
+Now, let's load the persisted Gradient Boost model into our script using the static `load()` method on Persistent Model by passing a [Persister](https://docs.rubixml.com/en/latest/persisters/api.html) instance pointing to the model in storage.
 
 ```php
 use Rubix\ML\PersistentModel;
@@ -191,20 +191,20 @@ $estimator = PersistentModel::load(new Filesystem('housing.model'));
 ```
 
 ### Make Predictions
-To obtain the predictions from the model, simply call `predict()` with the dataset containing the unknown samples. Then submit those predictions along with their IDs to the [contest page](https://www.kaggle.com/c/house-prices-advanced-regression-techniques).
+To obtain the predictions from the model, call the `predict()` method with the dataset containing the unknown samples.
 
 ```php
 $predictions = $estimator->predict($dataset);
 ```
 
-That's it! Good luck on the competition!
+Nice work! Now you can submit your predictions with their IDs to the [contest page](https://www.kaggle.com/c/house-prices-advanced-regression-techniques) to see how well you did.
 
 ### Wrap Up
 
 - Regressors are a type of estimator that predict continuous valued outcomes such as house prices.
 - Ensemble learning combines the predictions of multiple estimators into one.
-- The [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) regressor is an ensemble learner that uses Regression Trees to fix the errors of a *weak* base estimator.
-- Gradient Boost can handle both categorical and continuous data types by default.
+- [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) is an ensemble learner that uses Regression Trees to fix up the errors of a *weak* base estimator.
+- Gradient Boost can handle both categorical and continuous data types at the same time by default.
 - Data science competitions are a great way to practice your machine learning skills.
 
 ### Next Steps
