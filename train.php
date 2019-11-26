@@ -2,8 +2,8 @@
 
 include __DIR__ . '/vendor/autoload.php';
 
-use Rubix\ML\PersistentModel;
 use Rubix\ML\Datasets\Labeled;
+use Rubix\ML\PersistentModel;
 use Rubix\ML\Transformers\NumericStringConverter;
 use Rubix\ML\Transformers\MissingDataImputer;
 use Rubix\ML\Regressors\GradientBoost;
@@ -55,6 +55,8 @@ $estimator = new PersistentModel(
 );
 
 $estimator->setLogger(new Screen('housing'));
+
+echo 'Training ...' . PHP_EOL;
 
 $estimator->train($dataset);
 
