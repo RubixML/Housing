@@ -15,8 +15,7 @@ ini_set('memory_limit', '-1');
 
 echo 'Loading data into memory ...' . PHP_EOL;
 
-$reader = Reader::createFromPath('unknown.csv')
-    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
+$reader = Reader::createFromPath('unknown.csv')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
     'MSSubClass', 'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',

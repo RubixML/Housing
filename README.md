@@ -32,8 +32,7 @@ The data are given to us in two separate CSV files - `dataset.csv` which has lab
 ```php
 use League\Csv\Reader;
 
-$reader = Reader::createFromPath('dataset.csv')
-    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
+$reader = Reader::createFromPath('dataset.csv')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
     'MSSubClass', 'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
@@ -145,8 +144,7 @@ The goal of the Kaggle contest is to predict the correct sale prices of each hou
 ```php
 use League\Csv\Reader;
 
-$reader = Reader::createFromPath('unknown.csv')
-    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
+$reader = Reader::createFromPath('unknown.csv')->setHeaderOffset(0);
 
 $samples = $reader->getRecords([
     'MSSubClass', 'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
