@@ -1,6 +1,12 @@
 # Rubix ML - Housing Price Predictor
 An example Rubix ML project that predicts house prices using a Gradient Boosted Machine (GBM) and a popular dataset from a [Kaggle competition](https://www.kaggle.com/c/house-prices-advanced-regression-techniques). In this tutorial, you'll learn about regression and the stage-wise additive boosting ensemble called [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html). By the end of the tutorial, you'll be able to submit your own predictions to the Kaggle competition.
 
+From Kaggle:
+
+> Ask a home buyer to describe their dream house, and they probably won't begin with the height of the basement ceiling or the proximity to an east-west railroad. But this playground competition's dataset proves that much more influences price negotiations than the number of bedrooms or a white-picket fence.
+> 
+> With 79 explanatory variables describing (almost) every aspect of residential homes in Ames, Iowa, this competition challenges you to predict the final price of each home.
+
 - **Difficulty:** Medium
 - **Training time:** Minutes
 - **Memory needed:** 1G
@@ -17,25 +23,24 @@ $ composer install
 ```
 
 ## Requirements
-- [PHP](https://php.net) 7.1.3 or above
+- [PHP](https://php.net) 7.2 or above
 
 ## Tutorial
 
 ### Introduction
-[Kaggle](https://www.kaggle.com) is a platform that allows you to test your data science skills by engaging with contests. This tutorial is designed to walk you through a regression problem in Rubix ML using the Kaggle housing prices challenge as an example. We are given a training set consisting of 1,460 labeled samples that we'll use to train the learner and 1,459 unlabeled samples for making predictions. Each sample contains a heterogeneous mix of categorical and continuous data types. Our goal is to build an estimator that correctly predicts the sale price of a house. We'll choose [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) as our estimator since it is capable of handling both categorical and continuous data types at the same time.
+[Kaggle](https://www.kaggle.com) is a platform that allows you to test your data science skills by engaging with contests. This tutorial is designed to walk you through a regression problem in Rubix ML using the Kaggle housing prices challenge as an example. We are given a training set consisting of 1,460 labeled samples that we'll use to train the learner and 1,459 unlabeled samples for making predictions. Each sample contains a heterogeneous mix of categorical and continuous data types. Our goal is to build an estimator that correctly predicts the sale price of a house. We'll choose [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) as our learner since it offers good performance and is capable of handling both categorical and continuous features.
 
 > **Note:** The source code for this example can be found in the [train.php](https://github.com/RubixML/Housing/blob/master/train.php) file in project root.
 
 ### Extracting the Data
-The data are given to us in two separate CSV files - `dataset.csv` which has labels for training and `unknown.csv` for predicting. Each feature column is denoted by a title in the CSV header which we'll use to identify the column. The PHP League's [CSV Reader](https://csv.thephpleague.com/) will assist us in extracting the data from the file.
+The data are given to us in two separate CSV files - `dataset.csv` which has labels for training and `unknown.csv` without labels for predicting. Each feature column is denoted by a title in the CSV header which we'll use to identify the column with our [Column Picker](https://docs.rubixml.com/en/latest/extractors/column-picker.html). Column Picker allows us to select and rearrange the columns of a data table while the data is in flight. It wraps another iterator object such as the built-in [CSV](https://docs.rubixml.com/en/latest/extractors/csv.html) extractor. In this case, we don't need the `Id` column of the dataset because it is uncorrelated with the outcome so we'll only specify the columns we need. When instantiating a new [Labeled](https://docs.rubixml.com/en/latest/datasets/labeled.html) dataset object via the `fromIterator()` method, the last column of the data table is taken to be the labels.
 
 ```php
-use League\Csv\Reader;
+use Rubix\ML\Datasets\Labeled;
+use Rubix\ML\Extractors\CSV;
+use Rubix\ML\Extractors\ColumnPicker;
 
-$reader = Reader::createFromPath('dataset.csv')
-    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
-
-$samples = $reader->getRecords([
+$extractor = new ColumnPicker(new CSV('dataset.csv', true), [
     'MSSubClass', 'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
     'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope',
     'Neighborhood', 'Condition1', 'Condition2', 'BldgType', 'HouseStyle',
@@ -51,18 +56,10 @@ $samples = $reader->getRecords([
     'GarageArea', 'GarageQual', 'GarageCond', 'PavedDrive', 'WoodDeckSF',
     'OpenPorchSF', 'EnclosedPorch', '3SsnPorch', 'ScreenPorch', 'PoolArea',
     'PoolQC', 'Fence', 'MiscFeature', 'MiscVal', 'MoSold', 'YrSold',
-    'SaleType', 'SaleCondition',
+    'SaleType', 'SaleCondition', 'SalePrice',
 ]);
 
-$labels = $reader->fetchColumn('SalePrice');
-```
-
-The `getRecords()` and `fetchColumn()` methods on the Reader instance return iterators which we'll load into a Labeled dataset object using the `fromIterator()` static factory method.
-
-```php
-use Rubix\ML\Datasets\Labeled;
-
-$dataset = Labeled::fromIterator($samples, $labels);
+$dataset = Labeled::fromIterator($extractor);
 ```
 
 ### Dataset Preparation
@@ -138,46 +135,25 @@ $estimator->save();
 ```
 
 ### Inference
-The goal of the Kaggle contest is to predict the correct sale prices of each house given a list of unknown samples. If all went well during training, we should be able to achieve good results with just this basic example. We'll start by importing the unknown samples from the `unknown.csv` file.
+The goal of the Kaggle contest is to predict the correct sale prices of each house given a list of unknown samples. If all went well during training, we should be able to achieve good results with just this basic example. We'll start by importing the unlabeled samples from the `unknown.csv` file.
 
 > **Note:** The source code for this example can be found in the [predict.php](https://github.com/RubixML/Housing/blob/master/predict.php) file in the project root.
 
 ```php
-use League\Csv\Reader;
+use Rubix\ML\Datasets\Unlabeled;
+use Rubix\ML\Extractors\CSV;
+use Rubix\ML\Transformers\NumericStringConverter;
 
-$reader = Reader::createFromPath('unknown.csv')
-    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
-
-$samples = $reader->getRecords([
-    'MSSubClass', 'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
-    'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope',
-    'Neighborhood', 'Condition1', 'Condition2', 'BldgType', 'HouseStyle',
-    'OverallQual', 'OverallCond', 'YearBuilt', 'YearRemodAdd', 'RoofStyle',
-    'RoofMatl', 'Exterior1st', 'Exterior2nd', 'MasVnrType', 'MasVnrArea',
-    'ExterQual', 'ExterCond', 'Foundation', 'BsmtQual', 'BsmtCond',
-    'BsmtExposure', 'BsmtFinType1', 'BsmtFinSF1', 'BsmtFinType2', 'BsmtFinSF2',
-    'BsmtUnfSF', 'TotalBsmtSF', 'Heating', 'HeatingQC', 'CentralAir',
-    'Electrical', '1stFlrSF', '2ndFlrSF', 'LowQualFinSF', 'GrLivArea',
-    'BsmtFullBath', 'BsmtHalfBath', 'FullBath', 'HalfBath', 'BedroomAbvGr',
-    'KitchenAbvGr', 'KitchenQual', 'TotRmsAbvGrd', 'Functional', 'Fireplaces',
-    'FireplaceQu', 'GarageType', 'GarageYrBlt', 'GarageFinish', 'GarageCars',
-    'GarageArea', 'GarageQual', 'GarageCond', 'PavedDrive', 'WoodDeckSF',
-    'OpenPorchSF', 'EnclosedPorch', '3SsnPorch', 'ScreenPorch', 'PoolArea',
-    'PoolQC', 'Fence', 'MiscFeature', 'MiscVal', 'MoSold', 'YrSold',
-    'SaleType', 'SaleCondition',
-]);
-
-$ids = iterator_to_array($reader->fetchColumn('Id'));
+$dataset = Unlabeled::fromIterator(new CSV('unknown.csv', true))
+    ->apply(new NumericStringConverter());
 ```
 
-Notice that we are also importing the ID numbers from the ID column into a separate array. We'll need these numbers to submit to the contest later.
-
-Since the samples in `unknown.csv` are unlabeled, we'll need to instantiate an [Unlabeled](https://docs.rubixml.com/en/latest/datasets/unlabeled.html) dataset object this time.
+This time we will need the `Id` column from the housing dataset so we can just import the unknown samples as they are. The `Id` values, however, are useless and incompatible with our model so after we dump them to a separate array, we'll drop the column from the dataset. The Id numbers will be needed to submit to the Kaggle contest later on.
 
 ```php
-use Rubix\ML\Datasets\Unlabeled;
+$ids = $dataset->column(0);
 
-$dataset = Unlabeled::fromIterator($samples);
+$dataset = $dataset->dropColumn(0);
 ```
 
 ### Load Model from Storage
@@ -208,14 +184,7 @@ Nice work! Now you can submit your predictions with their IDs to the [contest pa
 - Data science competitions are a great way to practice your machine learning skills.
 
 ### Next Steps
-Have a look at the Gradient Boost [documentation](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) page to get a better sense of what the learner can do. Try tuning the hyper-parameters for better results. Consider filtering out noise samples from the dataset by using methods on the dataset object. For example, you may want to remove extremely large and expensive houses from the training set.
-
-## Original Dataset
-From Kaggle:
-
-> Ask a home buyer to describe their dream house, and they probably won't begin with the height of the basement ceiling or the proximity to an east-west railroad. But this playground competition's dataset proves that much more influences price negotiations than the number of bedrooms or a white-picket fence.
-> 
-> With 79 explanatory variables describing (almost) every aspect of residential homes in Ames, Iowa, this competition challenges you to predict the final price of each home.
+Have a look at the [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html) documentation page to get a better sense of what the learner can do. Try tuning the hyper-parameters for better results. Consider filtering out noise samples from the dataset by using methods on the dataset object. For example, you may want to remove extremely large and expensive houses from the training set.
 
 ### References
 >- D. De Cock. (2011). Ames, Iowa: Alternative to the Boston Housing Data as an End of Semester Regression Project. Journal of Statistics Education, Volume 19, Number 3.

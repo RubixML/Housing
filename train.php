@@ -3,6 +3,8 @@
 include __DIR__ . '/vendor/autoload.php';
 
 use Rubix\ML\Datasets\Labeled;
+use Rubix\ML\Extractors\CSV;
+use Rubix\ML\Extractors\ColumnPicker;
 use Rubix\ML\PersistentModel;
 use Rubix\ML\Transformers\NumericStringConverter;
 use Rubix\ML\Transformers\MissingDataImputer;
@@ -10,7 +12,6 @@ use Rubix\ML\Regressors\GradientBoost;
 use Rubix\ML\Regressors\RegressionTree;
 use Rubix\ML\Persisters\Filesystem;
 use Rubix\ML\Other\Loggers\Screen;
-use League\Csv\Reader;
 use League\Csv\Writer;
 
 use function Rubix\ML\array_transpose;
@@ -19,10 +20,7 @@ ini_set('memory_limit', '-1');
 
 echo 'Loading data into memory ...' . PHP_EOL;
 
-$reader = Reader::createFromPath('dataset.csv')
-    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
-
-$samples = $reader->getRecords([
+$extractor = new ColumnPicker(new CSV('dataset.csv', true), [
     'MSSubClass', 'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
     'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope',
     'Neighborhood', 'Condition1', 'Condition2', 'BldgType', 'HouseStyle',
@@ -38,12 +36,10 @@ $samples = $reader->getRecords([
     'GarageArea', 'GarageQual', 'GarageCond', 'PavedDrive', 'WoodDeckSF',
     'OpenPorchSF', 'EnclosedPorch', '3SsnPorch', 'ScreenPorch', 'PoolArea',
     'PoolQC', 'Fence', 'MiscFeature', 'MiscVal', 'MoSold', 'YrSold',
-    'SaleType', 'SaleCondition',
+    'SaleType', 'SaleCondition', 'SalePrice',
 ]);
 
-$labels = $reader->fetchColumn('SalePrice');
-
-$dataset = Labeled::fromIterator($samples, $labels);
+$dataset = Labeled::fromIterator($extractor);
 
 $dataset->apply(new NumericStringConverter())
     ->apply(new MissingDataImputer())
@@ -64,6 +60,7 @@ $scores = $estimator->scores();
 $losses = $estimator->steps();
 
 $writer = Writer::createFromPath('progress.csv', 'w+');
+
 $writer->insertOne(['score', 'loss']);
 $writer->insertAll(array_transpose([$scores, $losses]));
 
