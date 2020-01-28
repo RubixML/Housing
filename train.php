@@ -20,18 +20,7 @@ ini_set('memory_limit', '-1');
 
 echo 'Loading data into memory ...' . PHP_EOL;
 
-<<<<<<< HEAD
 $extractor = new ColumnPicker(new CSV('dataset.csv', true), [
-||||||| merged common ancestors
-$reader = Reader::createFromPath('dataset.csv')
-    ->setDelimiter(',')->setEnclosure('"')->setHeaderOffset(0);
-
-$samples = $reader->getRecords([
-=======
-$reader = Reader::createFromPath('dataset.csv')->setHeaderOffset(0);
-
-$samples = $reader->getRecords([
->>>>>>> c0f4410ff995a78dd0bc189bbcac17dcdf29076d
     'MSSubClass', 'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
     'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope',
     'Neighborhood', 'Condition1', 'Condition2', 'BldgType', 'HouseStyle',
