@@ -14,7 +14,7 @@ From Kaggle:
 ## Installation
 Clone the repository locally using [Git](https://git-scm.com/):
 ```sh
-$ git clone https://github.com/RubixML/Credit
+$ git clone https://github.com/RubixML/Housing
 ```
   
 Install dependencies using [Composer](https://getcomposer.org/):
