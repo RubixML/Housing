@@ -1,15 +1,17 @@
 # Rubix ML - Housing Price Predictor
 An example Rubix ML project that predicts house prices using a Gradient Boosted Machine (GBM) and a popular dataset from a [Kaggle competition](https://www.kaggle.com/c/house-prices-advanced-regression-techniques). In this tutorial, you'll learn about regression and the stage-wise additive boosting ensemble called [Gradient Boost](https://docs.rubixml.com/en/latest/regressors/gradient-boost.html). By the end of the tutorial, you'll be able to submit your own predictions to the Kaggle competition.
 
+- **Difficulty:** Medium
+- **Training time:** Minutes
+
 From Kaggle:
 
 > Ask a home buyer to describe their dream house, and they probably won't begin with the height of the basement ceiling or the proximity to an east-west railroad. But this playground competition's dataset proves that much more influences price negotiations than the number of bedrooms or a white-picket fence.
 > 
 > With 79 explanatory variables describing (almost) every aspect of residential homes in Ames, Iowa, this competition challenges you to predict the final price of each home.
 
-- **Difficulty:** Medium
-- **Training time:** Minutes
-- **Memory needed:** 1G
+## Requirements
+- [PHP](https://php.net) 7.2 or above
 
 ## Installation
 Clone the repository locally using [Git](https://git-scm.com/):
@@ -21,9 +23,6 @@ Install dependencies using [Composer](https://getcomposer.org/):
 ```sh
 $ composer install
 ```
-
-## Requirements
-- [PHP](https://php.net) 7.2 or above
 
 ## Tutorial
 
@@ -188,3 +187,6 @@ Have a look at the [Gradient Boost](https://docs.rubixml.com/en/latest/regressor
 
 ### References
 >- D. De Cock. (2011). Ames, Iowa: Alternative to the Boston Housing Data as an End of Semester Regression Project. Journal of Statistics Education, Volume 19, Number 3.
+
+## License
+The code is licensed [Apache 2.0](LICENSE.md) and the tutorial is licensed [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).

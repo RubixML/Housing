@@ -1,12 +1,14 @@
 {
     "name": "rubix/housing",
     "type": "project",
-    "description": "This is an example Rubix ML project that predicts house prices using a Gradient Boosted Machine.",
+    "description": "An example project that predicts house prices for a Kaggle competition using a Gradient Boosted Machine.",
     "homepage": "https://github.com/RubixML/Housing",
-    "license": "MIT",
+    "license": "Apache-2.0",
     "keywords": [
-        "php", "machine", "learning", "data", "science", "mining", "predictive", "modeling",
-        "ai", "regression", "gradient-boost", "regression-tree", "ensemble", "boosting"
+        "dataset", "data science", "ensemble", "example project", "gbm", "gradient boost",
+        "gradient boosted machine", "imputation", "machine learning", "ml", "php", "php ml",
+        "price prediction", "regression", "regressor", "regression tree", "rubix ml", "rubixml",
+        "tutorial"
     ],
     "authors": [
         {
