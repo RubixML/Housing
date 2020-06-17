@@ -16,7 +16,7 @@ From Kaggle:
 ## Installation
 Clone the repository locally using [Git](https://git-scm.com/):
 ```sh
-$ git clone https://github.com/RubixML/Credit
+$ git clone https://github.com/RubixML/Housing
 ```
   
 Install dependencies using [Composer](https://getcomposer.org/):
@@ -62,7 +62,7 @@ $dataset = Labeled::fromIterator($extractor);
 ```
 
 ### Dataset Preparation
-Next we'll apply a series of transformations to the training set to prepare it for the learner. By default, the CSV Reader imports everything as a string - therefore, we must convert the numerical values to integers and floating point numbers beforehand so they can be recognized by the learner as continuous features. The [Numeric String Converter](https://docs.rubixml.com/en/latest/transformers/numeric-string-converter.html) will handle this for us. Since some feature columns contain missing data, we'll also apply the [Missing Data Imputer](https://docs.rubixml.com/en/latest/transformers/missing-data-imputer.html) which replaces missing values with a pretty good guess. Lastly, since the labels are also meant to be continuous, we'll apply a separate transformation to the labels of the training set using a standard PHP function `intval()` which converts values to integers.
+Next we'll apply a series of transformations to the training set to prepare it for the learner. By default, the CSV Reader imports everything as a string - therefore, we must convert the numerical values to integers and floating point numbers beforehand so they can be recognized by the learner as continuous features. The [Numeric String Converter](https://docs.rubixml.com/en/latest/transformers/numeric-string-converter.html) will handle this for us. Since some feature columns contain missing data, we'll also apply the [Missing Data Imputer](https://docs.rubixml.com/en/latest/transformers/missing-data-imputer.html) which replaces missing values with a pretty good guess. Lastly, since the labels should also be continuous, we'll apply a separate transformation to the labels using a standard PHP function `intval()` callback which converts values to integers.
 
 ```php
 use Rubix\ML\Transformers\NumericStringConverter;
@@ -92,10 +92,10 @@ $estimator = new PersistentModel(
 
 The first two hyper-parameters of Gradient Boost are the booster's settings and the learning rate, respectively. For this example, we'll use a standard Regression Tree with a maximum depth of 4 as the booster and a learning rate of 0.1 but feel free to play with these settings on your own.
 
-The Persistent Model meta-estimator takes the GBM learner instance as its first parameter and a Persister object as the second. The [Filesystem](https://docs.rubixml.com/en/latest/persisters/filesystem.html) persister is responsible for storing and loading the model on disk and takes the path of the model file as a parameter. In addition, we'll tell the persister to keep a copy of every saved model by turning history mode on.
+The Persistent Model meta-estimator constructor takes the GBM instance as its first argument and a Persister object as the second. The [Filesystem](https://docs.rubixml.com/en/latest/persisters/filesystem.html) persister is responsible for storing and loading the model on disk and takes the path of the model file as an argument. In addition, we'll tell the persister to keep a copy of every saved model by setting history mode to true.
 
 ### Setting a Logger
-Since both Persistent Model and Gradient Boost implement the [Verbose](https://docs.rubixml.com/en/latest/verbose.html) interface, we can monitor progress during training by setting a logger instance on the learner. The built-in [Screen](https://docs.rubixml.com/en/latest/other/loggers/screen.html) logger will suffice for this example, but you can use any PSR-3 compatible logger.
+Since Gradient Boost implements the [Verbose](https://docs.rubixml.com/en/latest/verbose.html) interface, we can monitor its progress during training by setting a logger instance on the learner. The built-in [Screen](https://docs.rubixml.com/en/latest/other/loggers/screen.html) logger will work well for most cases, but you can use any PSR-3 compatible logger including [Monolog](https://github.com/Seldaek/monolog).
 
 ```php
 use Rubix\ML\Other\Loggers\Screen;
@@ -104,14 +104,14 @@ $estimator->setLogger(new Screen('housing'));
 ```
 
 ### Training
-Now, we're ready to train the learner by calling the `train()` method with the training dataset.
+Now, we're ready to train the learner by calling the `train()` method with the training dataset as an argument.
 
 ```php
 $estimator->train($dataset);
 ```
 
 ### Validation Score and Loss
-During training, the learner will record the validation score and the training loss at each epoch. The validation score is calculated using the default [R Squared](https://docs.rubixml.com/en/latest/cross-validation/metrics/r-squared.html) metric on a hold out portion of the training set. Contrariwise, the training loss is the value of the cost function (in this case the L2 loss) computed over the training data. We can visualize the training progress by plotting these metrics. To export the scores and losses you can call the additional `scores()` and `steps()` methods on the learner instance.
+During training, the learner will record the validation score and the training loss at each iteration or *epoch*. The validation score is calculated using the default [RMSE](https://docs.rubixml.com/en/latest/cross-validation/metrics/rmse.html) metric on a hold out portion of the training set. Contrariwise, the training loss is the value of the cost function (in this case the L2 or *quadratic* loss) computed over the training data. We can visualize the training progress by plotting these metrics. To export the scores and losses you can call the additional `scores()` and `steps()` methods on the learner instance.
 
 ```php
 $scores = $estimator->scores();
@@ -156,7 +156,7 @@ $dataset = $dataset->dropColumn(0);
 ```
 
 ### Load Model from Storage
-Now, let's load the persisted Gradient Boost model into our script using the static `load()` method on Persistent Model by passing a [Persister](https://docs.rubixml.com/en/latest/persisters/api.html) instance pointing to the model in storage.
+Now, let's load the persisted Gradient Boost estimator into our script using the static `load()` method on the Persistent Model class by passing it a [Persister](https://docs.rubixml.com/en/latest/persisters/api.html) instance pointing to the model in storage.
 
 ```php
 use Rubix\ML\PersistentModel;
