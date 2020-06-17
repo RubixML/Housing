@@ -15,7 +15,7 @@ From Kaggle:
 
 #### Recommended
 - [Tensor extension](https://github.com/RubixML/Tensor) for faster training and inference
-- 12G of system memory or more
+- 1G of system memory or more
 
 ## Installation
 Clone the repository locally using [Git](https://git-scm.com/):
