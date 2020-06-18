@@ -10,23 +10,18 @@ From Kaggle:
 > 
 > With 79 explanatory variables describing (almost) every aspect of residential homes in Ames, Iowa, this competition challenges you to predict the final price of each home.
 
+## Installation
+Clone the project locally using [Composer](https://getcomposer.org/):
+```sh
+$ composer create-project rubix/housing
+```
+
 ## Requirements
 - [PHP](https://php.net) 7.2 or above
 
 #### Recommended
 - [Tensor extension](https://github.com/RubixML/Tensor) for faster training and inference
 - 1G of system memory or more
-
-## Installation
-Clone the repository locally using [Git](https://git-scm.com/):
-```sh
-$ git clone https://github.com/RubixML/Housing
-```
-  
-Install dependencies using [Composer](https://getcomposer.org/):
-```sh
-$ composer install
-```
 
 ## Tutorial
 
@@ -137,6 +132,11 @@ Lastly, save the model so it can be used later to predict the house prices of th
 $estimator->save();
 ```
 
+Now we're ready to execute the training script by calling it from the command line.
+```sh
+$ php train.php
+```
+
 ### Inference
 The goal of the Kaggle contest is to predict the correct sale prices of each house given a list of unknown samples. If all went well during training, we should be able to achieve good results with just this basic example. We'll start by importing the unlabeled samples from the `unknown.csv` file.
 
@@ -174,6 +174,11 @@ To obtain the predictions from the model, call the `predict()` method with the d
 
 ```php
 $predictions = $estimator->predict($dataset);
+```
+
+Now run the prediction script by calling it from the command line.
+```sh
+$ php predict.php
 ```
 
 Nice work! Now you can submit your predictions with their IDs to the [contest page](https://www.kaggle.com/c/house-prices-advanced-regression-techniques) to see how well you did.

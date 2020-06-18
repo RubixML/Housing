@@ -23,6 +23,13 @@
         "league/csv": "^9.5",
         "rubix/ml": "^0.1.0-rc2"
     },
+    "suggest": {
+        "ext-tensor": "For faster training and inference"
+    },
+    "scripts": {
+        "predict": "@php predict.php",
+        "train": "@php train.php"
+    },
     "config": {
         "preferred-install": "dist",
         "sort-packages": true
