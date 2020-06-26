@@ -156,7 +156,7 @@ This time we will need the `Id` column from the housing dataset so we can just i
 ```php
 $ids = $dataset->column(0);
 
-$dataset = $dataset->dropColumn(0);
+$dataset->dropColumn(0);
 ```
 
 ### Load Model from Storage

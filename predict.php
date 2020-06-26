@@ -20,7 +20,7 @@ $dataset = Unlabeled::fromIterator(new CSV('unknown.csv', true))
 
 $ids = $dataset->column(0);
 
-$dataset = $dataset->dropColumn(0);
+$dataset->dropColumn(0);
 
 $estimator = PersistentModel::load(new Filesystem('housing.model'));
 
