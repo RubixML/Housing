@@ -7,7 +7,6 @@ use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Transformers\NumericStringConverter;
 use Rubix\ML\PersistentModel;
 use Rubix\ML\Persisters\Filesystem;
-use League\Csv\Writer;
 
 use function Rubix\ML\array_transpose;
 
@@ -28,9 +27,8 @@ echo 'Making predictions ...' . PHP_EOL;
 
 $predictions = $estimator->predict($dataset);
 
-$writer = Writer::createFromPath('predictions.csv', 'w+');
-
-$writer->insertOne(['Id', 'SalePrice']);
-$writer->insertAll(array_transpose([$ids, $predictions]));
+Unlabeled::build(array_transpose([$ids, $predictions]))
+    ->toCSV(['Id', 'SalePrice'])
+    ->write('predictions.csv');
 
 echo 'Predictions saved to predictions.csv' . PHP_EOL;

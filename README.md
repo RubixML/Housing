@@ -99,7 +99,7 @@ Since Gradient Boost implements the [Verbose](https://docs.rubixml.com/en/latest
 ```php
 use Rubix\ML\Other\Loggers\Screen;
 
-$estimator->setLogger(new Screen('housing'));
+$estimator->setLogger(new Screen());
 ```
 
 ### Training
@@ -110,13 +110,26 @@ $estimator->train($dataset);
 ```
 
 ### Validation Score and Loss
-During training, the learner will record the validation score and the training loss at each iteration or *epoch*. The validation score is calculated using the default [RMSE](https://docs.rubixml.com/en/latest/cross-validation/metrics/rmse.html) metric on a hold out portion of the training set. Contrariwise, the training loss is the value of the cost function (in this case the L2 or *quadratic* loss) computed over the training data. We can visualize the training progress by plotting these metrics. To export the scores and losses you can call the additional `scores()` and `steps()` methods on the learner instance.
+During training, the learner will record the validation score and the training loss at each iteration or *epoch*. The validation score is calculated using the default [RMSE](https://docs.rubixml.com/en/latest/cross-validation/metrics/rmse.html) metric on a hold out portion of the training set. Contrariwise, the training loss is the value of the cost function (in this case the L2 or *quadratic* loss) computed over the training data. We can visualize the training progress by plotting these metrics. To output the scores and losses you can call the additional `scores()` and `steps()` methods on the learner instance.
 
 ```php
 $scores = $estimator->scores();
 
 $losses = $estimator->steps();
 ```
+
+Then we can export the data to a CSV file using an [Unlabeled](https://docs.rubixml.com/en/latest/datasets/unlabeled.html) dataset object. The `array_transpose()` method takes a 2-dimensional array and changes the rows to columns and vice versa.
+
+```php
+use Rubix\ML\Unlabeled;
+use function Rubix\ML\array_transpose;
+
+Unlabeled::build(array_transpose([$scores, $losses]))
+    ->toCSV(['scores', 'losses'])
+    ->write('progress.csv');
+
+```
+
 
 Here is an example of what the validation score and training loss look like when plotted. You can plot the values yourself by importing the `progress.csv` file into your favorite plotting software.
 
@@ -174,6 +187,17 @@ To obtain the predictions from the model, call the `predict()` method with the d
 
 ```php
 $predictions = $estimator->predict($dataset);
+```
+
+Then we'll use another [Unlabeled](https://docs.rubixml.com/en/latest/datasets/unlabeled.html) dataset to write the IDs and predictions to a CSV file that we'll submit to the competition.
+
+```php
+use Rubix\ML\Datasets\Unlabeled;
+use function Rubix\ML\array_transpose;
+
+Unlabeled::build(array_transpose([$ids, $predictions]))
+    ->toCSV(['Id', 'SalePrice'])
+    ->write('predictions.csv');
 ```
 
 Now run the prediction script by calling it from the command line.
