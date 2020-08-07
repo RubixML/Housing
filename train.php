@@ -2,6 +2,7 @@
 
 include __DIR__ . '/vendor/autoload.php';
 
+use Rubix\ML\Other\Loggers\Screen;
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Extractors\ColumnPicker;
@@ -11,14 +12,15 @@ use Rubix\ML\Transformers\MissingDataImputer;
 use Rubix\ML\Regressors\GradientBoost;
 use Rubix\ML\Regressors\RegressionTree;
 use Rubix\ML\Persisters\Filesystem;
-use Rubix\ML\Other\Loggers\Screen;
 use Rubix\ML\Datasets\Unlabeled;
 
 use function Rubix\ML\array_transpose;
 
 ini_set('memory_limit', '-1');
 
-echo 'Loading data into memory ...' . PHP_EOL;
+$logger = new Screen();
+
+$logger->info('Loading data into memory');
 
 $extractor = new ColumnPicker(new CSV('dataset.csv', true), [
     'MSSubClass', 'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
@@ -41,6 +43,8 @@ $extractor = new ColumnPicker(new CSV('dataset.csv', true), [
 
 $dataset = Labeled::fromIterator($extractor);
 
+$logger->info('Preprocessing');
+
 $dataset->apply(new NumericStringConverter())
     ->apply(new MissingDataImputer())
     ->transformLabels('intval');
@@ -50,9 +54,7 @@ $estimator = new PersistentModel(
     new Filesystem('housing.model', true)
 );
 
-$estimator->setLogger(new Screen());
-
-echo 'Training ...' . PHP_EOL;
+$estimator->setLogger($logger);
 
 $estimator->train($dataset);
 
@@ -63,7 +65,7 @@ Unlabeled::build(array_transpose([$scores, $losses]))
     ->toCSV(['scores', 'losses'])
     ->write('progress.csv');
 
-echo 'Progress saved to progress.csv' . PHP_EOL;
+$logger->info('Progress saved to progress.csv');
 
 if (strtolower(readline('Save this model? (y|[n]): ')) === 'y') {
     $estimator->save();

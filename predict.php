@@ -2,6 +2,7 @@
 
 include __DIR__ . '/vendor/autoload.php';
 
+use Rubix\ML\Other\Loggers\Screen;
 use Rubix\ML\Datasets\Unlabeled;
 use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Transformers\NumericStringConverter;
@@ -12,7 +13,9 @@ use function Rubix\ML\array_transpose;
 
 ini_set('memory_limit', '-1');
 
-echo 'Loading data into memory ...' . PHP_EOL;
+$logger = new Screen();
+
+$logger->info('Loading data into memory');
 
 $dataset = Unlabeled::fromIterator(new CSV('unknown.csv', true))
     ->apply(new NumericStringConverter());
@@ -23,7 +26,7 @@ $dataset->dropColumn(0);
 
 $estimator = PersistentModel::load(new Filesystem('housing.model'));
 
-echo 'Making predictions ...' . PHP_EOL;
+$logger->info('Making predictions');
 
 $predictions = $estimator->predict($dataset);
 
@@ -31,4 +34,4 @@ Unlabeled::build(array_transpose([$ids, $predictions]))
     ->toCSV(['Id', 'SalePrice'])
     ->write('predictions.csv');
 
-echo 'Predictions saved to predictions.csv' . PHP_EOL;
+$logger->info('Predictions saved to predictions.csv');
