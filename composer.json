@@ -13,17 +13,13 @@
     "authors": [
         {
             "name": "Andrew DalPino",
-            "email": "me@andrewdalpino.com",
-            "homepage": "https://andrewdalpino.com",
+            "homepage": "https://github.com/andrewdalpino",
             "role": "Lead Engineer"
         }
     ],
     "require": {
         "php": ">=7.2",
-        "rubix/ml": "^0.1.0"
-    },
-    "suggest": {
-        "ext-tensor": "For faster training and inference"
+        "rubix/ml": "^0.3.0"
     },
     "scripts": {
         "predict": "@php predict.php",

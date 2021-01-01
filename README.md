@@ -133,9 +133,9 @@ Unlabeled::build(array_transpose([$scores, $losses]))
 
 Here is an example of what the validation score and training loss look like when plotted. You can plot the values yourself by importing the `progress.csv` file into your favorite plotting software.
 
-![R Squared Score](https://raw.githubusercontent.com/RubixML/Housing/master/docs/images/validation-score.svg?sanitize=true)
+![R Squared Score](https://raw.githubusercontent.com/RubixML/Housing/master/docs/images/validation-score.png)
 
-![L2 Loss](https://raw.githubusercontent.com/RubixML/Housing/master/docs/images/training-loss.svg?sanitize=true)
+![L2 Loss](https://raw.githubusercontent.com/RubixML/Housing/master/docs/images/training-loss.png)
 
 
 ### Saving
