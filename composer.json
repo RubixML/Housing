@@ -3,7 +3,7 @@
     "type": "project",
     "description": "An example project that predicts house prices for a Kaggle competition using a Gradient Boosted Machine.",
     "homepage": "https://github.com/RubixML/Housing",
-    "license": "Apache-2.0",
+    "license": "MIT",
     "keywords": [
         "dataset", "data science", "ensemble", "example project", "gbm", "gradient boost",
         "gradient boosted machine", "imputation", "machine learning", "ml", "php", "php ml",
