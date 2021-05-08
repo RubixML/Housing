@@ -17,7 +17,7 @@ $ composer create-project rubix/housing
 ```
 
 ## Requirements
-- [PHP](https://php.net) 7.2 or above
+- [PHP](https://php.net) 7.4 or above
 
 #### Recommended
 - [Tensor extension](https://github.com/RubixML/Tensor) for faster training and inference
@@ -85,7 +85,7 @@ use Rubix\ML\Persisters\Filesystem;
 
 $estimator = new PersistentModel(
     new GradientBoost(new RegressionTree(4), 0.1),
-    new Filesystem('housing.model', true)
+    new Filesystem('housing.rbx', true)
 );
 ```
 
@@ -110,26 +110,15 @@ $estimator->train($dataset);
 ```
 
 ### Validation Score and Loss
-During training, the learner will record the validation score and the training loss at each iteration or *epoch*. The validation score is calculated using the default [RMSE](https://docs.rubixml.com/latest/cross-validation/metrics/rmse.html) metric on a hold out portion of the training set. Contrariwise, the training loss is the value of the cost function (in this case the L2 or *quadratic* loss) computed over the training data. We can visualize the training progress by plotting these metrics. To output the scores and losses you can call the additional `scores()` and `steps()` methods on the learner instance.
+During training, the learner will record the validation score and the training loss at each iteration or *epoch*. The validation score is calculated using the default [RMSE](https://docs.rubixml.com/latest/cross-validation/metrics/rmse.html) metric on a hold out portion of the training set. Contrariwise, the training loss is the value of the cost function (in this case the L2 or *quadratic* loss) computed over the training data. We can visualize the training progress by plotting these metrics. To output the scores and losses you can call the additional `steps()` method on the learner instance. Then we can export the data to a CSV file by exporting the iterator returned by `steps()` to a CSV file.
 
 ```php
-$scores = $estimator->scores();
+use Rubix\ML\Extractors\CSV;
 
-$losses = $estimator->steps();
+$extractor = new CSV('progress.csv', true);
+
+$extractor->export($estimator->steps());
 ```
-
-Then we can export the data to a CSV file using an [Unlabeled](https://docs.rubixml.com/latest/datasets/unlabeled.html) dataset object. The `array_transpose()` method takes a 2-dimensional array and changes the rows to columns and vice versa.
-
-```php
-use Rubix\ML\Unlabeled;
-use function Rubix\ML\array_transpose;
-
-Unlabeled::build(array_transpose([$scores, $losses]))
-    ->toCSV(['scores', 'losses'])
-    ->write('progress.csv');
-
-```
-
 
 Here is an example of what the validation score and training loss look like when plotted. You can plot the values yourself by importing the `progress.csv` file into your favorite plotting software.
 
@@ -164,14 +153,6 @@ $dataset = Unlabeled::fromIterator(new CSV('unknown.csv', true))
     ->apply(new NumericStringConverter());
 ```
 
-This time we will need the `Id` column from the housing dataset so we can just import the unknown samples as they are. The `Id` values, however, are useless and incompatible with our model so after we dump them to a separate array, we'll drop the column from the dataset. The Id numbers will be needed to submit to the Kaggle contest later on.
-
-```php
-$ids = $dataset->column(0);
-
-$dataset->dropColumn(0);
-```
-
 ### Load Model from Storage
 Now, let's load the persisted Gradient Boost estimator into our script using the static `load()` method on the Persistent Model class by passing it a [Persister](https://docs.rubixml.com/latest/persisters/api.html) instance pointing to the model in storage.
 
@@ -189,15 +170,22 @@ To obtain the predictions from the model, call the `predict()` method with the d
 $predictions = $estimator->predict($dataset);
 ```
 
-Then we'll use another [Unlabeled](https://docs.rubixml.com/latest/datasets/unlabeled.html) dataset to write the IDs and predictions to a CSV file that we'll submit to the competition.
+Then we'll use the CSV extractor to export the IDs and predictions to a file that we'll submit to the competition.
 
 ```php
-use Rubix\ML\Datasets\Unlabeled;
-use function Rubix\ML\array_transpose;
+use Rubix\ML\Extractors\ColumnPicker;
+use Rubix\ML\Extractors\CSV;
 
-Unlabeled::build(array_transpose([$ids, $predictions]))
-    ->toCSV(['Id', 'SalePrice'])
-    ->write('predictions.csv');
+$extractor = new ColumnPicker(new CSV('dataset.csv', true), ['Id']);
+
+$ids = array_column(iterator_to_array($extractor), 'Id');
+
+array_unshift($ids, 'Id');
+array_unshift($predictions, 'SalePrice');
+
+$extractor = new CSV('predictions.csv');
+
+$extractor->export(array_transpose([$ids, $predictions]));
 ```
 
 Now run the prediction script by calling it from the command line.

@@ -2,7 +2,7 @@
 
 include __DIR__ . '/vendor/autoload.php';
 
-use Rubix\ML\Other\Loggers\Screen;
+use Rubix\ML\Loggers\Screen;
 use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Extractors\ColumnPicker;
@@ -12,7 +12,6 @@ use Rubix\ML\Transformers\MissingDataImputer;
 use Rubix\ML\Regressors\GradientBoost;
 use Rubix\ML\Regressors\RegressionTree;
 use Rubix\ML\Persisters\Filesystem;
-use Rubix\ML\Datasets\Unlabeled;
 
 use function Rubix\ML\array_transpose;
 
@@ -43,27 +42,22 @@ $extractor = new ColumnPicker(new CSV('dataset.csv', true), [
 
 $dataset = Labeled::fromIterator($extractor);
 
-$logger->info('Preprocessing');
-
 $dataset->apply(new NumericStringConverter())
     ->apply(new MissingDataImputer())
     ->transformLabels('intval');
 
 $estimator = new PersistentModel(
     new GradientBoost(new RegressionTree(4), 0.1),
-    new Filesystem('housing.model', true)
+    new Filesystem('housing.rbx', true)
 );
 
 $estimator->setLogger($logger);
 
 $estimator->train($dataset);
 
-$scores = $estimator->scores();
-$losses = $estimator->steps();
+$extractor = new CSV('progress.csv', true);
 
-Unlabeled::build(array_transpose([$scores, $losses]))
-    ->toCSV(['scores', 'losses'])
-    ->write('progress.csv');
+$extractor->export($estimator->steps());
 
 $logger->info('Progress saved to progress.csv');
 
