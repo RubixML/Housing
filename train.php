@@ -13,8 +13,6 @@ use Rubix\ML\Regressors\GradientBoost;
 use Rubix\ML\Regressors\RegressionTree;
 use Rubix\ML\Persisters\Filesystem;
 
-use function Rubix\ML\array_transpose;
-
 ini_set('memory_limit', '-1');
 
 $logger = new Screen();
