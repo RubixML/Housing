@@ -7,7 +7,7 @@ use Rubix\ML\Datasets\Labeled;
 use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Extractors\ColumnPicker;
 use Rubix\ML\PersistentModel;
-use Rubix\ML\Transformers\NumericStringConverter;
+use Rubix\ML\Transformers\FloatTypeConverter;
 use Rubix\ML\Transformers\MissingDataImputer;
 use Rubix\ML\Regressors\GradientBoost;
 use Rubix\ML\Regressors\RegressionTree;
@@ -20,7 +20,7 @@ $logger = new Screen();
 $logger->info('Loading data into memory');
 
 $extractor = new ColumnPicker(new CSV('dataset.csv', true), [
-    'MSSubClass', 'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
+    'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
     'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope',
     'Neighborhood', 'Condition1', 'Condition2', 'BldgType', 'HouseStyle',
     'OverallQual', 'OverallCond', 'YearBuilt', 'YearRemodAdd', 'RoofStyle',
@@ -40,12 +40,12 @@ $extractor = new ColumnPicker(new CSV('dataset.csv', true), [
 
 $dataset = Labeled::fromIterator($extractor);
 
-$dataset->apply(new NumericStringConverter())
+$dataset->apply(new FloatTypeConverter())
     ->apply(new MissingDataImputer())
-    ->transformLabels('intval');
+    ->transformLabels('floatval');
 
 $estimator = new PersistentModel(
-    new GradientBoost(new RegressionTree(4), 0.1),
+    new GradientBoost(new RegressionTree(4), 0.1, minChange: 1e-5, window: 10),
     new Filesystem('housing.rbx', true)
 );
 

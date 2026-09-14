@@ -6,7 +6,7 @@ use Rubix\ML\Loggers\Screen;
 use Rubix\ML\Extractors\ColumnPicker;
 use Rubix\ML\Extractors\CSV;
 use Rubix\ML\Datasets\Unlabeled;
-use Rubix\ML\Transformers\NumericStringConverter;
+use Rubix\ML\Transformers\FloatTypeConverter;
 use Rubix\ML\PersistentModel;
 use Rubix\ML\Persisters\Filesystem;
 
@@ -19,7 +19,7 @@ $logger = new Screen();
 $logger->info('Loading data into memory');
 
 $extractor = new ColumnPicker(new CSV('dataset.csv', true), [
-    'MSSubClass', 'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
+    'MSZoning', 'LotFrontage', 'LotArea', 'Street', 'Alley',
     'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope',
     'Neighborhood', 'Condition1', 'Condition2', 'BldgType', 'HouseStyle',
     'OverallQual', 'OverallCond', 'YearBuilt', 'YearRemodAdd', 'RoofStyle',
@@ -38,7 +38,7 @@ $extractor = new ColumnPicker(new CSV('dataset.csv', true), [
 ]);
 
 $dataset = Unlabeled::fromIterator($extractor)
-    ->apply(new NumericStringConverter());
+    ->apply(new FloatTypeConverter());
 
 $estimator = PersistentModel::load(new Filesystem('housing.rbx'));
 
