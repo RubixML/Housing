@@ -2,9 +2,6 @@
 
 An example Rubix ML project that predicts house prices using a Gradient Boosted Machine (GBM) and a popular dataset from a [Kaggle competition](https://www.kaggle.com/c/house-prices-advanced-regression-techniques). In this tutorial, you'll learn about regression and the stage-wise additive boosting ensemble called [Gradient Boost](https://rubixml.github.io/ML/latest/regressors/gradient-boost.html). By the end of the tutorial, you'll be able to submit your own predictions to the Kaggle competition.
 
-- **Difficulty:** Medium
-- **Training time:** Minutes
-
 From Kaggle:
 
 > Ask a home buyer to describe their dream house, and they probably won't begin with the height of the basement ceiling or the proximity to an east-west railroad. But this playground competition's dataset proves that much more influences price negotiations than the number of bedrooms or a white-picket fence.
@@ -22,10 +19,9 @@ $ composer create-project rubix/housing
 
 - [PHP](https://php.net) 8.3 or above
 
-#### Recommended
+### Recommended
 
-- [Tensor extension](https://github.com/RubixML/Tensor) for faster training and inference
-- 1G of system memory or more
+- [Tensor extension](https://github.com/RubixML/Tensor-Ext) for faster training and inference
 
 ## Tutorial
 
@@ -128,7 +124,7 @@ use Rubix\ML\Extractors\CSV;
 
 $extractor = new CSV('progress.csv', true);
 
-$extractor->export($estimator->steps());
+$extractor->export($estimator->progress());
 ```
 
 Here is an example of what the validation score and training loss look like when plotted. You can plot the values yourself by importing the `progress.csv` file into your favorite plotting software.

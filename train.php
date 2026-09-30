@@ -55,7 +55,7 @@ $estimator->train($dataset);
 
 $extractor = new CSV('progress.csv', true);
 
-$extractor->export($estimator->steps());
+$extractor->export($estimator->progress());
 
 $logger->info('Progress saved to progress.csv');
 
