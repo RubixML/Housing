@@ -27,7 +27,7 @@ $ composer create-project rubix/housing
 
 ### Introduction
 
-[Kaggle](https://www.kaggle.com) is a platform that allows you to test your data science skills by engaging with contests. This tutorial is designed to walk you through a regression problem in Rubix ML using the Kaggle housing prices challenge as an example. We are given a training set consisting of 1,460 labeled samples that we'll use to train the learner and 1,459 unlabeled samples for making predictions. Each sample contains a heterogeneous mix of categorical and continuous data types. Our goal is to build an estimator that correctly predicts the sale price of a house. We'll choose [Gradient Boost](https://rubixml.github.io/ML/latest/regressors/gradient-boost.html) as our learner since it offers good performance and is capable of handling both categorical and continuous features.
+[Kaggle](https://www.kaggle.com) is a platform that allows you to test your data science skills by engaging with contests. This tutorial is designed to walk you through a regression problem in Rubix ML using the Kaggle housing prices challenge as an example. We are given a training set consisting of 1,460 labeled samples that we'll split into a training set used to fit the learner and a smaller validation set used to monitor it, plus 1,459 unlabeled samples for making predictions. Each sample contains a heterogeneous mix of categorical and continuous data types. Our goal is to build an estimator that correctly predicts the sale price of a house. We'll choose [Gradient Boost](https://rubixml.github.io/ML/latest/regressors/gradient-boost.html) as our learner since it offers good performance and is capable of handling both categorical and continuous features.
 
 > **Note:** The source code for this example can be found in the [train.php](https://github.com/RubixML/Housing/blob/master/train.php) file in project root.
 
@@ -75,6 +75,18 @@ $dataset->apply(new FloatTypeConverter())
     ->transformLabels('floatval');
 ```
 
+### Splitting the Dataset
+
+Before we fit the learner, we set aside a portion of the labeled data to act as a validation set. The validation set is never trained on - it is only used to score the estimator as boosting proceeds so we can see how well it generalizes and when it has stopped improving. First we shuffle the samples with the `randomize()` method to remove any ordering that may exist in the original data table. Then the `binnedSplit()` method divides the dataset in two according to the ratio we give it.
+
+Unlike a plain random split, [Binned Split](https://rubixml.github.io/ML/latest/datasets/labeled.html) stratifies the samples by binning the continuous labels and allocating the same proportion of samples from every bin to both subsets. This preserves the distribution of the label in each subset, which matters here because sale prices are heavily skewed - a naive split would be free to leave the cheaper end of the market out of one of the subsets. The method returns both subsets as an array with the left subset containing exactly `floor($ratio * numSamples())` samples.
+
+```php
+[$training, $testing] = $dataset->randomize()->binnedSplit(0.8);
+```
+
+That leaves us with 1,168 training samples and 292 validation samples. The `randomize()` call is not strictly required - Binned Split shuffles the bins internally before awarding the leftover samples - but it guarantees that the samples drawn from within each bin aren't handed out in whatever order they appear in `dataset.csv`, which matters if the original data was sorted by anything other than the label.
+
 ### Instantiating the Learner
 
 A Gradient Boosted Machine (GBM) is a type of ensemble estimator that uses [Regression Trees](https://rubixml.github.io/ML/latest/regressors/regression-tree.html) to fix up the errors of a *weak* base learner. It does so in an iterative process that involves training a new Regression Tree (called a *booster*) on the error residuals of the predictions given by the previous estimator. Thus, GBM produces an additive model whose predictions become more refined as the number of boosters are added. The coordination of multiple estimators to act as a single estimator is called *ensemble* learning.
@@ -93,7 +105,7 @@ $estimator = new PersistentModel(
 );
 ```
 
-The first two hyper-parameters of Gradient Boost are the booster's settings and the learning rate, respectively. The remaining two named parameters, `minChange` and `window`, govern how the learner decides when training has converged: `window` is the number of recent validation scores to consider, and `minChange` is the minimum improvement in the validation score required within that window for boosting to continue. For this example, we'll use a standard Regression Tree with a maximum depth of 4 as the booster and a learning rate of 0.1, requiring a minimum improvement of 1e-5 across a window of 10 iterations, but feel free to play with these settings on your own.
+The first two hyper-parameters of Gradient Boost are the booster's settings and the learning rate, respectively. The remaining two named parameters, `minChange` and `window`, govern when the learner decides it has converged: `minChange` is the minimum change in the training loss necessary to continue training, and `window` is the number of evaluations without an improvement in the validation score to wait before considering an early stop. For this example, we'll use a standard Regression Tree with a maximum depth of 4 as the booster and a learning rate of 0.1, requiring a minimum change of 1e-5 in the training loss and tolerating 10 evaluations without improvement before stopping, but feel free to play with these settings on your own.
 
 The Persistent Model meta-estimator constructor takes the GBM instance as its first argument and a Persister object as the second. The [Filesystem](https://rubixml.github.io/ML/latest/persisters/filesystem.html) persister is responsible for storing and loading the model on disk and takes the path of the model file as an argument. In addition, we'll tell the persister to keep a copy of every saved model by setting history mode to true.
 
@@ -109,15 +121,23 @@ $estimator->setLogger(new Screen());
 
 ### Training
 
-Now, we're ready to train the learner by calling the `train()` method with the training dataset as an argument.
+Now we can hand Gradient Boost the validation set we held out with the `setValidationDataset()` method. The learner scores itself on this dataset every `evalInterval` epochs (3 by default) using the default [RMSE](https://rubixml.github.io/ML/latest/cross-validation/metrics/rmse.html) metric. Those scores serve two purposes: they give us a measure of generalization that we can watch as boosting progresses, and they drive early stopping and snapshotting. In other words, once `window` evaluations in a row fail to improve on the best score seen so far, training terminates and the ensemble is restored to the state it had at that best epoch. Passing `null` disables progress monitoring and early stopping altogether - Gradient Boost will train for the full number of epochs and the validation score column will be empty.
 
 ```php
-$estimator->train($dataset);
+$estimator->setValidationDataset($testing);
 ```
+
+With the validation dataset in place, we're ready to train the learner by calling the `train()` method with the training dataset as an argument.
+
+```php
+$estimator->train($training);
+```
+
+Note that we train on `$training` only. The validation dataset is used exclusively for scoring, so including it in training would invalidate the score.
 
 ### Validation Score and Loss
 
-During training, the learner will record the validation score and the training loss at each iteration or *epoch*. The validation score is calculated using the default [RMSE](https://rubixml.github.io/ML/latest/cross-validation/metrics/rmse.html) metric on a hold out portion of the training set. Contrariwise, the training loss is the value of the cost function (in this case the L2 or *quadratic* loss) computed over the training data. We can visualize the training progress by plotting these metrics. To output the scores and losses you can call the additional `steps()` method on the learner instance. Then we can export the data to a CSV file by exporting the iterator returned by `steps()` to a CSV file.
+During training, the learner records the training loss at each epoch or iteration and the validation score at each evaluation. The training loss is the value of the cost function (in this case the L2 or *quadratic* loss) computed over the training data, whereas the validation score is the RMSE computed over the hold out set we gave to the learner. Since the score is only measured every 3rd epoch, the validation score will be null for the epochs in between. We can visualize the training progress by plotting these metrics. To output the scores and losses you can call the additional `progress()` method on the learner instance. Then we can export the data to a CSV file by exporting the iterator returned by `progress()` to a CSV file.
 
 ```php
 use Rubix\ML\Extractors\CSV;
@@ -233,11 +253,12 @@ Nice work! Now you can submit your predictions with their IDs to the [contest pa
 - Ensemble learning combines the predictions of multiple estimators into one.
 - [Gradient Boost](https://rubixml.github.io/ML/latest/regressors/gradient-boost.html) is an ensemble learner that uses Regression Trees to fix up the errors of a *weak* base estimator.
 - Gradient Boost can handle both categorical and continuous data types at the same time by default.
+- A validation set that is never trained on gives you an honest measure of generalization and lets the learner stop early once it stops improving.
 - Data science competitions are a great way to practice your machine learning skills.
 
 ### Next Steps
 
-Have a look at the [Gradient Boost](https://rubixml.github.io/ML/latest/regressors/gradient-boost.html) documentation page to get a better sense of what the learner can do. Try tuning the hyper-parameters for better results. Consider filtering out noise samples from the dataset by using methods on the dataset object. For example, you may want to remove extremely large and expensive houses from the training set.
+Have a look at the [Gradient Boost](https://rubixml.github.io/ML/latest/regressors/gradient-boost.html) documentation page to get a better sense of what the learner can do. Try tuning the hyper-parameters for better results - a larger `window` will let the learner keep boosting for longer before giving up, and the `evalInterval` named parameter controls how often the validation set is scored. You may also want to adjust the split ratio passed to `binnedSplit()` if you would rather hold out more or less data for validation. Consider filtering out noise samples from the dataset by using methods on the dataset object. For example, you may want to remove extremely large and expensive houses from the training set.
 
 ### References
 

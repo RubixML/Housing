@@ -44,14 +44,18 @@ $dataset->apply(new FloatTypeConverter())
     ->apply(new MissingDataImputer())
     ->transformLabels('floatval');
 
+[$training, $testing] = $dataset->randomize()->binnedSplit(0.8);
+
 $estimator = new PersistentModel(
     new GradientBoost(new RegressionTree(4), 0.1, minChange: 1e-5, window: 10),
-    new Filesystem('housing.rbx', true)
+    new Filesystem('model.rbx', true)
 );
 
 $estimator->setLogger($logger);
 
-$estimator->train($dataset);
+$estimator->setValidationDataset($testing);
+
+$estimator->train($training);
 
 $extractor = new CSV('progress.csv', true);
 

@@ -40,7 +40,7 @@ $extractor = new ColumnPicker(new CSV('dataset.csv', true), [
 $dataset = Unlabeled::fromIterator($extractor)
     ->apply(new FloatTypeConverter());
 
-$estimator = PersistentModel::load(new Filesystem('housing.rbx'));
+$estimator = PersistentModel::load(new Filesystem('model.rbx'));
 
 $logger->info('Making predictions');
 
