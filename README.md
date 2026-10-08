@@ -21,7 +21,7 @@ $ composer create-project rubix/housing
 
 ### Recommended
 
-- [Tensor extension](https://github.com/RubixML/Tensor-Ext) for faster training and inference
+- [Tensor 4.1+ extension](https://github.com/RubixML/Tensor-Ext) for faster training and inference
 
 ## Tutorial
 
